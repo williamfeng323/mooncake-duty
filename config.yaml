@@ -1,0 +1,6 @@
+mongoConfig:
+  url: localhost
+  port: 12345
+  username: root
+  password: example
+  database: mooncake 
