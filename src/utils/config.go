@@ -8,11 +8,12 @@ import (
 
 // MongoConfig the config of mongo
 type MongoConfig struct {
-	URL      string `json:"url"`
-	Port     string `json:"port"`
-	Username string `json:"username"`
-	Password string `json:"password"`
-	Database string `json:"database"`
+	URL               string `json:"url"`
+	Port              string `json:"port"`
+	Username          string `json:"username"`
+	Password          string `json:"password"`
+	Database          string `json:"database"`
+	ConnectionOptions string `json:"connectOptions"`
 }
 
 // Config the configuration of the app.
