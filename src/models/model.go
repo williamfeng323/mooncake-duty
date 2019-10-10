@@ -20,7 +20,6 @@ type IDocumentBase interface {
 
 // BaseModel the basic model that other models should embedded.
 type BaseModel struct {
-	*mongo.Collection
 	document  IDocumentBase
 	ID        primitive.ObjectID `json:"id" bson:"_id,omitempty"`
 	CreatedAt time.Time          `json:"createdAt" bson:"createdAt"`
