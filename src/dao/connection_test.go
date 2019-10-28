@@ -1,4 +1,4 @@
-package models
+package dao
 
 import (
 	"testing"
@@ -12,25 +12,30 @@ func TestConnect(t *testing.T) {
 	// Only pass t into top-level Convey calls
 	Convey("Given an empty context", t, func() {
 		Convey("When trigger Connect with conf", func() {
+			db := &Connection{}
 			conf := utils.MongoConfig{
-				URL:      "localhost",
-				Port:     "27017",
-				Username: "root",
-				Password: "example",
-				Database: "mooncake",
+				URL:               "localhost",
+				Port:              "27017",
+				Username:          "root",
+				Password:          "example",
+				Database:          "mooncake",
+				ConnectionOptions: "authSource=admin",
 			}
-			conn, err := Connect(nil, conf)
-			Convey("The client should be initialized", func() {
+			err := db.InitConnection(nil, conf)
+			pingError := db.Client.Ping(nil, nil)
+			Convey("The client should be initialized and no error when ping", func() {
 				So(err, ShouldBeNil)
-				So(conn, ShouldNotBeNil)
+				So(pingError, ShouldBeNil)
+				So(db.Client, ShouldNotBeNil)
 			})
 		})
 		Convey("When trigger Connect without conf", func() {
+			db := &Connection{}
 			conf := utils.Config{}
-			conn, err := Connect(nil, conf.Mongo)
+			err := db.InitConnection(nil, conf.Mongo)
 			Convey("The error should be return", func() {
 				So(err, ShouldNotBeNil)
-				So(conn, ShouldBeNil)
+				So(db.Client, ShouldBeNil)
 			})
 		})
 	})

@@ -6,13 +6,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type saleParam struct {
-	Category string `form:"category"`
-	Year     int16  `form:"year"`
+type getAccountsParam struct {
+	RoleName string `json:"roleName"`
 }
 
-func getSale(c *gin.Context) {
-	sp := saleParam{}
+func getAccounts(c *gin.Context) {
+	sp := getAccountsParam{}
 	if err := c.ShouldBindQuery(&sp); err == nil {
 		// // revenueList := getSalesHistory(sp.Category, sp.Year)
 		// c.JSON(http.StatusOK, revenueList)

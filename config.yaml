@@ -4,3 +4,4 @@ mongoConfig:
   username: root
   password: example
   database: mooncake 
+  connectOptions: ?authSource=admin

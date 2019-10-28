@@ -6,8 +6,8 @@ import (
 
 //Register the sales APIs to root.
 func Register(router *gin.RouterGroup) {
-	saleRoutes := router.Group("/account")
+	saleRoutes := router.Group("/accounts")
 	{
-		saleRoutes.GET("", getSale)
+		saleRoutes.GET("", getAccounts)
 	}
 }
