@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"reflect"
 	"time"
 
 	"williamfeng323/mooncake-duty/src/utils"
@@ -20,20 +21,18 @@ type Collection struct {
 
 //Connection provide the client to connect the database
 type Connection struct {
-	Database string
-	Client   *mongo.Client
+	Database           string
+	Client             *mongo.Client
+	CollectionRegistry map[string]*Collection
 }
-
-//Database is the object you get the MongoDB client/connection
-var (
-	Database Connection
-)
 
 // InitConnection initial the connection to the database
 func (conn *Connection) InitConnection(ctx context.Context, config utils.MongoConfig) error {
+	var contextCancel context.CancelFunc
 	if ctx == nil {
-		ctx, _ = context.WithTimeout(context.Background(), 30*time.Second)
+		ctx, contextCancel = context.WithTimeout(context.Background(), 30*time.Second)
 	}
+	defer contextCancel()
 	u := url.URL{
 		Scheme:   "mongodb",
 		User:     url.UserPassword(config.Username, config.Password),
@@ -48,25 +47,37 @@ func (conn *Connection) InitConnection(ctx context.Context, config utils.MongoCo
 	}
 	conn.Database = config.Database
 	conn.Client = client
+	conn.CollectionRegistry = map[string]*Collection{}
 	return nil
 }
 
 //Register will register the collection connection to the Connection.
-// func (conn *Connection) Register(document IDocumentBase, collectionName string) {
+// Before you can operate your model, you must register it.
+func (conn *Connection) Register(document IDocumentBase) {
 
-// 	if document == nil {
-// 		panic("document can not be nil")
-// 	}
+	if document == nil {
+		panic("document can not be nil")
+	}
 
-// 	reflectType := reflect.TypeOf(document)
-// 	typeName := reflectType.Elem().Name()
+	reflectType := reflect.TypeOf(document)
+	typeName := reflectType.Elem().Name()
 
-// 	//check if model was already registered
-// 	if _, ok := conn.collectionRegistry[typeName]; !ok {
-// 		collection := &Collection{conn.client.Database(conn.database).Collection(typeName)}
-// 		conn.collectionRegistry[typeName] = collection
-// 		fmt.Printf("Registered collection '%v'", typeName)
-// 	} else {
-// 		fmt.Printf("Tried to register collection '%v' twice", typeName)
-// 	}
-// }
+	//check if model was already registered
+	if _, ok := conn.CollectionRegistry[typeName]; !ok {
+		collection := &Collection{conn.Client.Database(conn.Database).Collection(typeName)}
+		conn.CollectionRegistry[typeName] = collection
+		fmt.Printf("Registered collection '%v'", typeName)
+	} else {
+		fmt.Printf("Tried to register collection '%v' twice", typeName)
+	}
+}
+
+// New return a document instance
+// To new a document, you should follow below steps:
+// connection.Register(&User{})
+// user := &User{}
+// connection.CollectionRegistry["User"].New(user)
+func (coll *Collection) New(doc IDocumentBase) error {
+	doc.SetCollection(coll.Collection)
+	return nil
+}

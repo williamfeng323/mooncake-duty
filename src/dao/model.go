@@ -3,40 +3,43 @@ package dao
 import (
 	"time"
 
-	"go.mongodb.org/mongo-driver/mongo"
-
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
-//IDocumentBase Interface which each collection document (model) hast to implement
+//IDocumentBase Interface which each collection document (model) has to implement
 type IDocumentBase interface {
+	SetCollection(*mongo.Collection)
 	Save() error
-	Update(interface{}) (error, map[string]interface{})
+	Update(interface{}) (map[string]interface{}, error)
 	Validate(...interface{}) (bool, []error)
-	DefaultValidate() (bool, []error)
-	// Find
 }
 
-// BaseModel the basic model that other models should embedded.
+// BaseModel is the base model that other models should embedded.
 type BaseModel struct {
-	collection    *mongo.Collection
-	IDocumentBase `json:"-" bson:"-"`
-	ID            primitive.ObjectID `json:"id" bson:"_id,omitempty"`
-	CreatedAt     time.Time          `json:"createdAt" bson:"createdAt"`
-	UpdatedAt     time.Time          `json:"updatedAt" bson:"updatedAt"`
-	Deleted       bool               `json:"-" bson:"deleted"`
+	collection *mongo.Collection
+	ID         primitive.ObjectID `json:"id" bson:"_id,omitempty"`
+	CreatedAt  time.Time          `json:"createdAt" bson:"createdAt"`
+	UpdatedAt  time.Time          `json:"updatedAt" bson:"updatedAt"`
+	Deleted    bool               `json:"-" bson:"deleted"`
 }
 
-//New return an model instance.
-// func (model *BaseModel) New() (*mongo.Client, error) {
-// 	Set client options
-// 	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
+// SetCollection will set the document's own collection instance
+func (model *BaseModel) SetCollection(coll *mongo.Collection) {
+	model.collection = coll
+}
 
-// 	// Connect to MongoDB
-// 	client, err := mongo.Connect(context.TODO(), clientOptions)
-// 	if err != nil {
-// 		return client, err
-// 	}
-// 	return client, nil
+// Save is the default save function to persistence the document
+func (model *BaseModel) Save() error {
+	return nil
+}
 
-// }
+// Update is the default function to update the document
+func (model *BaseModel) Update(interface{}) (map[string]interface{}, error) {
+	return nil, nil
+}
+
+// Validate is the way you validate the document you save.
+func (model *BaseModel) Validate(...interface{}) (bool, []error) {
+	return true, nil
+}

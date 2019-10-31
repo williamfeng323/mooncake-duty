@@ -41,16 +41,42 @@ func TestConnect(t *testing.T) {
 	})
 }
 
-// func TestGetCollection(t *testing.T) {
-// 	// Only pass t into top-level Convey calls
-// 	Convey("Given an test struct", t, func() {
-// 		type TestStruct struct{}
-// 		Convey("When get the model collection", func() {
-// 			test := &TestStruct{}
-// 			collection := getCollection(test)
-// 			Convey("The client should be initialized", func() {
-// 				So(collection, ShouldEqual, "testStruct")
-// 			})
-// 		})
-// 	})
-// }
+func TestRegister(t *testing.T) {
+	Convey("Giving a test struct", t, func() {
+		type TestModel struct {
+			BaseModel
+			IsTest bool
+		}
+		db := &Connection{}
+		db.InitConnection(nil, utils.GetConf().Mongo)
+		Convey("when register to a Connection instance", func() {
+			db.Register(&TestModel{})
+			Convey("Should register the collection to connection", func() {
+				So(db.CollectionRegistry["TestModel"], ShouldNotBeNil)
+			})
+		})
+	})
+}
+
+func TestNewModel(t *testing.T) {
+	// Only pass t into top-level Convey calls
+	Convey("Given a Connection instance and a TestModel", t, func() {
+		type TestModel struct {
+			BaseModel
+			IsTest bool
+		}
+		conf := utils.GetConf()
+		db := &Connection{}
+		db.InitConnection(nil, conf.Mongo)
+		db.Register(&TestModel{})
+		Convey("When trigger New", func() {
+			testModel := &TestModel{}
+			err := db.CollectionRegistry["TestModel"].New(testModel)
+			Convey("should return a instance model instance with connection to collection", func() {
+				So(err, ShouldBeNil)
+				So(testModel, ShouldNotBeNil)
+				So(testModel.collection, ShouldNotBeNil)
+			})
+		})
+	})
+}
