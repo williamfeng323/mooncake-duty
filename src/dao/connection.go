@@ -62,9 +62,11 @@ func (conn *Connection) Register(document IDocumentBase) {
 	reflectType := reflect.TypeOf(document)
 	typeName := reflectType.Elem().Name()
 
-	//check if model was already registered
+	// check if model was already registered, if not, register the model
+	// into CollectionRegistry[modelName]
 	if _, ok := conn.CollectionRegistry[typeName]; !ok {
-		collection := &Collection{conn.Client.Database(conn.Database).Collection(typeName)}
+		collection := &Collection{
+			conn.Client.Database(conn.Database).Collection(typeName)}
 		conn.CollectionRegistry[typeName] = collection
 		fmt.Printf("Registered collection '%v'", typeName)
 	} else {
@@ -79,5 +81,6 @@ func (conn *Connection) Register(document IDocumentBase) {
 // connection.CollectionRegistry["User"].New(user)
 func (coll *Collection) New(doc IDocumentBase) error {
 	doc.SetCollection(coll.Collection)
+	doc.SetDocument(doc)
 	return nil
 }
