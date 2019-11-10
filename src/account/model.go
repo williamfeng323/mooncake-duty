@@ -10,33 +10,21 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-//Role the role struct type for account.
-type Role struct {
-	dao.BaseModel
-	Name string `json:"name" bson:"name"`
-}
-
 // Account struct of the user account
 type Account struct {
-	dao.BaseModel
-	Projects []string             `json:"projects" bson:"projects"`
-	Email    string               `json:"email" bson:"email"`
-	Password string               `json:"password" bson:"password"`
-	RolesID  []primitive.ObjectID `json:"rolesId" bson:"rolesId"`
-}
-
-//FindByRoleID finds the account by specific role's id
-func (acct *Account) FindByRoleID(roleID primitive.ObjectID) ([]Account, error) {
-	filter := bson.M{"RolesID": bson.A{roleID}}
-	rst, err := acct.Find(filter)
-	accts := []Account{}
-	rst.All(nil, accts)
-	return accts, err
+	dao.BaseModel `json:",inline" bson:",inline"`
+	Projects      []string `json:"projects" bson:"projects"`
+	Email         string   `json:"email" bson:"email" required:"true"`
+	Password      string   `json:"password" bson:"password" required:"true"`
 }
 
 // InsertAccount create a new document in mongoDB with
 // initial createdAt and _id
 func (acct *Account) InsertAccount() (*mongo.InsertOneResult, error) {
+	validationErrors := acct.DefaultValidator()
+	if validationErrors != nil {
+		return nil, validationErrors[0]
+	}
 	acct.CreatedAt = time.Now()
 	acct.ID = primitive.NewObjectID()
 	bAcct, err := bson.Marshal(acct)

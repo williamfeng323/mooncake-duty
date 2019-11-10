@@ -22,8 +22,10 @@ type IDocumentBase interface {
 }
 
 // BaseModel is the base model that other models should embedded.
+// Please use tag `json:",inline" bson:",inline"` to make the exported
+// fields inline.
 type BaseModel struct {
-	IDocumentBase
+	document   IDocumentBase
 	collection *mongo.Collection
 	typeValue  *reflect.Value
 	ID         primitive.ObjectID `json:"id" bson:"_id,omitempty"`
@@ -41,7 +43,7 @@ func (model *BaseModel) SetCollection(coll *mongo.Collection) {
 // It guaranteens the generic function DefaultValidator can get the
 // run time data of the document.
 func (model *BaseModel) SetDocument(doc IDocumentBase) {
-	model.IDocumentBase = doc
+	model.document = doc
 }
 
 // GetCollection will set the document's own collection instance
@@ -59,18 +61,10 @@ func (model *BaseModel) FindByID(id primitive.ObjectID) *mongo.SingleResult {
 
 //Find return the result cursor base on your query
 func (model *BaseModel) Find(query ...interface{}) (*mongo.Cursor, error) {
-
-	var finalQuery interface{}
+	finalQuery := initQuery(query)
 	ctx, cancelFunc := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancelFunc()
 	//accept zero or one query param
-	if len(query) == 0 {
-		finalQuery = bson.M{}
-	} else if len(query) == 1 {
-		finalQuery = query[0]
-	} else {
-		panic("DB: Find method accepts no or maximum one query param.")
-	}
 	cursor, err := model.collection.Find(ctx, finalQuery)
 	if err != nil {
 		return nil, err
@@ -78,12 +72,29 @@ func (model *BaseModel) Find(query ...interface{}) (*mongo.Cursor, error) {
 	return cursor, nil
 }
 
+//DeleteByID find document by document _id
+func (model *BaseModel) DeleteByID(id primitive.ObjectID) (*mongo.DeleteResult, error) {
+	filter := bson.M{"_id": id}
+	ctx, cancelFunc := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancelFunc()
+	return model.collection.DeleteOne(ctx, filter)
+}
+
+//Delete deletes the documents according to the query provided.
+func (model *BaseModel) Delete(query ...interface{}) (*mongo.DeleteResult, error) {
+	finalQuery := initQuery(query)
+	ctx, cancelFunc := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancelFunc()
+	rst, err := model.collection.DeleteOne(ctx, finalQuery)
+	return rst, err
+}
+
 //DefaultValidator will validate below tag:
 //    required: boolean <-- The field could not be empty.
 //    TBD: More default validators
 func (model *BaseModel) DefaultValidator() []error {
 
-	docElem := reflect.ValueOf(model.IDocumentBase).Elem()
+	docElem := reflect.ValueOf(model.document).Elem()
 	fieldType := docElem.Type()
 	validationErrors := []error{}
 
@@ -140,4 +151,17 @@ func validateRequired(fieldValue reflect.Value, fieldName string) error {
 		return fmt.Errorf("Field - %s cannot be null", fieldName)
 	}
 	return nil
+}
+
+func initQuery(query []interface{}) interface{} {
+	var finalQuery interface{}
+	//accept zero or one query param
+	if len(query) == 0 {
+		finalQuery = bson.M{}
+	} else if len(query) == 1 {
+		finalQuery = query[0]
+	} else {
+		panic("DB: Find method accepts no or maximum one query param.")
+	}
+	return finalQuery
 }
