@@ -20,7 +20,8 @@ type MongoConfig struct {
 
 // Config the configuration of the app.
 type Config struct {
-	Mongo MongoConfig `mapstructure:"mongoConfig" yaml:"mongoConfig"`
+	Mongo  MongoConfig `mapstructure:"mongoConfig" yaml:"mongoConfig"`
+	JWTKey string      `yaml:"jwtKey"`
 }
 
 var config Config

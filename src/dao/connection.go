@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/url"
 	"reflect"
+	"sync"
 	"time"
 
 	"williamfeng323/mooncake-duty/src/utils"
@@ -74,6 +75,15 @@ func (conn *Connection) Register(document IDocumentBase) {
 	}
 }
 
+// GetCollection returns the registered collection
+func (conn *Connection) GetCollection(collectionName string) *Collection {
+	if collection, ok := conn.CollectionRegistry[collectionName]; ok {
+		return collection
+	} else {
+		panic("Account does not registered to the DB")
+	}
+}
+
 // New return a document instance
 // To new a document, you should follow below steps:
 // connection.Register(&User{})
@@ -83,4 +93,19 @@ func (coll *Collection) New(doc IDocumentBase) error {
 	doc.SetCollection(coll.Collection)
 	doc.SetDocument(doc)
 	return nil
+}
+
+var connection Connection
+var lock sync.RWMutex
+
+//GetConnection return the initted DB connection struct
+func GetConnection() *Connection {
+	lock.Lock()
+	defer lock.Unlock()
+	if reflect.DeepEqual(connection, reflect.Zero(reflect.TypeOf(connection)).Interface()) {
+		connection = Connection{}
+		connection.InitConnection(nil, utils.GetConf().Mongo)
+		return &connection
+	}
+	return &connection
 }

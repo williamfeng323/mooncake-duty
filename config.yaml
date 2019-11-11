@@ -5,3 +5,4 @@ mongoConfig:
   password: example
   database: mooncake 
   connectOptions: authSource=admin
+jwtKey: superS3cr#t

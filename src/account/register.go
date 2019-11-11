@@ -8,6 +8,6 @@ import (
 func Register(router *gin.RouterGroup) {
 	saleRoutes := router.Group("/accounts")
 	{
-		saleRoutes.GET("", getAccounts)
+		saleRoutes.PUT("", createAccountController)
 	}
 }

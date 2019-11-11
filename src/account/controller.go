@@ -6,16 +6,32 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type getAccountsParam struct {
-	RoleName string `json:"roleName"`
+type basicAccountsParam struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
 
-func getAccounts(c *gin.Context) {
-	sp := getAccountsParam{}
-	if err := c.ShouldBindQuery(&sp); err == nil {
-		// // revenueList := getSalesHistory(sp.Category, sp.Year)
-		// c.JSON(http.StatusOK, revenueList)
-	} else {
+func createAccountController(c *gin.Context) {
+	defer func() {
+		if r := recover(); r != nil {
+			c.Status(http.StatusInternalServerError)
+		}
+	}()
+	sp := basicAccountsParam{}
+	if err := c.ShouldBind(&sp); err != nil {
 		c.Status(http.StatusBadRequest)
 	}
+	createResult, err := createAccount(sp.Email, sp.Password)
+	if err != nil {
+		c.Status(http.StatusInternalServerError)
+	}
+	c.JSON(http.StatusOK, createResult)
+}
+
+func loginController(c *gin.Context) {
+	sp := basicAccountsParam{}
+	if err := c.ShouldBind(&sp); err != nil {
+		c.Status(http.StatusBadRequest)
+	}
+	signIn(sp.Email, sp.Password)
 }
