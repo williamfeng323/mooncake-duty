@@ -33,5 +33,10 @@ func loginController(c *gin.Context) {
 	if err := c.ShouldBind(&sp); err != nil {
 		c.Status(http.StatusBadRequest)
 	}
-	signIn(sp.Email, sp.Password)
+	tokenString, err := signIn(sp.Email, sp.Password)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err})
+	}
+	c.JSON(http.StatusOK, gin.H{"token": tokenString})
+	return
 }
