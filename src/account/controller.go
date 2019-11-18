@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type basicAccountsParam struct {
@@ -25,7 +26,8 @@ func createAccountController(c *gin.Context) {
 	if err != nil {
 		c.Status(http.StatusInternalServerError)
 	}
-	c.JSON(http.StatusOK, createResult)
+	id := createResult.InsertedID.(primitive.ObjectID)
+	c.JSON(http.StatusOK, gin.H{"id": id.String()})
 }
 
 func loginController(c *gin.Context) {
@@ -38,5 +40,22 @@ func loginController(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err})
 	}
 	c.JSON(http.StatusOK, gin.H{"token": tokenString})
+	return
+}
+
+type refreshParam struct {
+	Token string `json:"token"`
+}
+
+func refreshController(c *gin.Context) {
+	params := refreshParam{}
+	if err := c.ShouldBind(&params); err != nil {
+		c.Status(http.StatusBadRequest)
+	}
+	refreshedToken, err := refresh(params.Token)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err})
+	}
+	c.JSON(http.StatusOK, gin.H{"token": refreshedToken})
 	return
 }

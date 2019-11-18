@@ -72,3 +72,27 @@ func TestSignIn(t *testing.T) {
 		acct.DeleteByID(acct.ID)
 	})
 }
+
+func TestRefresh(t *testing.T) {
+	Convey("Giving a db connection and init user", t, func() {
+		acct := &Account{}
+		conn := dao.GetConnection()
+		conn.Register(acct)
+		conn.CollectionRegistry["Account"].New(acct)
+		acct.Email = "test@test.com"
+		acct.Password = "password"
+		acct.InsertAccount()
+		Convey("Should return refreshed token when called with valid token", func() {
+			tokenString, _ := signIn("test@test.com", "password")
+			refreshedToken, err := refresh(tokenString)
+			So(refreshedToken, ShouldNotBeEmpty)
+			So(err, ShouldBeEmpty)
+		})
+		Convey("Should return error when token invalid(any reason even timeout)", func() {
+			refreshedToken, err := refresh("whateverTokenString")
+			So(refreshedToken, ShouldBeEmpty)
+			So(err, ShouldBeError)
+		})
+		acct.DeleteByID(acct.ID)
+	})
+}

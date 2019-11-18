@@ -9,5 +9,7 @@ func Register(router *gin.RouterGroup) {
 	saleRoutes := router.Group("/accounts")
 	{
 		saleRoutes.PUT("", createAccountController)
+		saleRoutes.POST("/login", loginController)
+		saleRoutes.POST("/refresh", refreshController)
 	}
 }
