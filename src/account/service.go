@@ -7,6 +7,8 @@ import (
 	"williamfeng323/mooncake-duty/src/dao"
 	"williamfeng323/mooncake-duty/src/utils"
 
+	"go.mongodb.org/mongo-driver/bson/primitive"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -23,6 +25,23 @@ func createAccount(email string, password string) (*mongo.InsertOneResult, error
 		return nil, fmt.Errorf("Account already exists")
 	}
 	return acct.InsertAccount()
+}
+
+func getAccountByID(id string) (Account, error) {
+	var acct Account
+	conn := dao.GetConnection()
+	acctModel := conn.GetCollection("Account")
+	acctModel.New(&acct)
+	objID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return Account{}, err
+	}
+	result := acct.FindByID(objID)
+	err = result.Decode(&acct)
+	if err != nil {
+		return Account{}, err
+	}
+	return acct, nil
 }
 
 func signIn(email string, password string) (string, error) {

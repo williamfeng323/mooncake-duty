@@ -45,6 +45,31 @@ func TestCreateAccount(t *testing.T) {
 	})
 }
 
+func TestFindByID(t *testing.T) {
+	Convey("Giving a db connection and init user", t, func() {
+		acct := &Account{}
+		conn := dao.GetConnection()
+		conn.Register(acct)
+		conn.CollectionRegistry["Account"].New(acct)
+		acct.Email = "test@test.com"
+		acct.Password = "password"
+		rst, _ := acct.InsertAccount()
+		id := rst.InsertedID.(primitive.ObjectID).Hex()
+		Convey("should return the account document when find a valid id", func() {
+			acct2, err := getAccountByID(id)
+			So(acct2, ShouldNotBeZeroValue)
+			So(err, ShouldBeNil)
+		})
+		Convey("should return nil account document when cannot find related id", func() {
+			fakeID := primitive.NewObjectID()
+			acct2, err := getAccountByID(fakeID.Hex())
+			So(acct2, ShouldBeZeroValue)
+			So(err, ShouldNotBeNil)
+		})
+		acct.DeleteByID(acct.ID)
+	})
+}
+
 func TestSignIn(t *testing.T) {
 	Convey("Giving a db connection and init user", t, func() {
 		acct := &Account{}

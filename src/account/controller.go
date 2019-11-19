@@ -8,26 +8,35 @@ import (
 )
 
 type basicAccountsParam struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Email    string `json:"email" binding:"required"`
+	Password string `json:"password" binding:"required"`
 }
 
 func createAccountController(c *gin.Context) {
-	defer func() {
-		if r := recover(); r != nil {
-			c.Status(http.StatusInternalServerError)
-		}
-	}()
 	sp := basicAccountsParam{}
 	if err := c.ShouldBind(&sp); err != nil {
-		c.Status(http.StatusBadRequest)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
 	createResult, err := createAccount(sp.Email, sp.Password)
 	if err != nil {
-		c.Status(http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
 	}
 	id := createResult.InsertedID.(primitive.ObjectID)
 	c.JSON(http.StatusOK, gin.H{"id": id.String()})
+}
+
+func getAccountByIDController(c *gin.Context) {
+	var id string
+	if err := c.ShouldBindUri(&id); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	}
+	user, err := getAccountByID(id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+	}
+	c.JSON(http.StatusOK, user)
 }
 
 func loginController(c *gin.Context) {
@@ -38,6 +47,7 @@ func loginController(c *gin.Context) {
 	tokenString, err := signIn(sp.Email, sp.Password)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err})
+		return
 	}
 	c.JSON(http.StatusOK, gin.H{"token": tokenString})
 	return
@@ -51,11 +61,12 @@ func refreshController(c *gin.Context) {
 	params := refreshParam{}
 	if err := c.ShouldBind(&params); err != nil {
 		c.Status(http.StatusBadRequest)
+		return
 	}
 	refreshedToken, err := refresh(params.Token)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err})
+		return
 	}
 	c.JSON(http.StatusOK, gin.H{"token": refreshedToken})
-	return
 }
