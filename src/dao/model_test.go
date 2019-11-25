@@ -41,9 +41,3 @@ func TestDefaultValidate(t *testing.T) {
 		})
 	})
 }
-
-func TestDelete(t *testing.T) {
-	Convey("Giving a testing model with init data", t, func() {
-
-	})
-}

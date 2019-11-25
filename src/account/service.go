@@ -3,6 +3,7 @@ package account
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"time"
 	"williamfeng323/mooncake-duty/src/dao"
 	"williamfeng323/mooncake-duty/src/utils"
@@ -13,18 +14,44 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func createAccount(email string, password string) (*mongo.InsertOneResult, error) {
+func createAccount(email string, password string, isAdmin bool) (*mongo.InsertOneResult, error) {
 	acct := &Account{}
 	conn := dao.GetConnection()
 	acctModel := conn.GetCollection("Account")
 	acctModel.New(acct)
 	acct.Email = email
 	acct.Password = password
+	acct.IsAdmin = isAdmin
 	isExist := acctModel.FindOne(nil, bson.M{"email": email})
 	if isExist.Err() == nil {
 		return nil, fmt.Errorf("Account already exists")
 	}
 	return acct.InsertAccount()
+}
+
+func updateAccount(id primitive.ObjectID, avatar string, mobile string) (*mongo.UpdateResult, error) {
+	if reflect.DeepEqual(id, reflect.Zero(reflect.TypeOf(id)).Interface()) {
+		return nil, fmt.Errorf("Missing Account ID")
+	}
+	acct, err := getAccountByID(id.Hex())
+	valueSet := bson.M{}
+	if err != nil {
+		return nil, err
+	}
+	if avatar != "" {
+		valueSet["avatar"] = avatar
+	}
+	if mobile != "" {
+		valueSet["mobile"] = mobile
+	}
+	ctx, cancelFunc := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancelFunc()
+	return acct.GetCollection().UpdateOne(ctx, bson.M{"_id": acct.ID}, bson.M{
+		"$set": valueSet,
+		"$currentDate": bson.M{
+			"updatedAt": true,
+		},
+	})
 }
 
 func getAccountByID(id string) (Account, error) {

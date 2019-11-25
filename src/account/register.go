@@ -4,13 +4,13 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-//Register the sales APIs to root.
+//Register the account APIs to root.
 func Register(router *gin.RouterGroup) {
-	saleRoutes := router.Group("/accounts")
+	accountRoutes := router.Group("/accounts")
 	{
-		saleRoutes.PUT("", createAccountController)
-		saleRoutes.POST("/:id", getAccountByIDController)
-		saleRoutes.POST("/login", loginController)
-		saleRoutes.POST("/refresh", refreshController)
+		accountRoutes.PUT("", createAccountController)
+		accountRoutes.POST("/:id", getAccountByIDController)
+		accountRoutes.POST("/login", loginController)
+		accountRoutes.POST("/refresh", refreshController)
 	}
 }

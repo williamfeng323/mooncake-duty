@@ -15,16 +15,16 @@ func TestCreateAccount(t *testing.T) {
 		conn := dao.GetConnection()
 
 		Convey("Should panic while no register Account", func() {
-			So(func() { createAccount("", "") }, ShouldPanic)
+			So(func() { createAccount("", "", true) }, ShouldPanic)
 		})
 		Convey("Should return error When email or password does not provided", func() {
 			conn.Register(acct)
-			rst, err := createAccount("", "")
+			rst, err := createAccount("", "", true)
 			So(rst, ShouldBeNil)
 			So(err, ShouldBeError)
 		})
 		Convey("Should return inserted account objectId when email/password valid", func() {
-			rst, err := createAccount("test123", "rstAbc.")
+			rst, err := createAccount("test123", "rstAbc.", true)
 			So(rst, ShouldNotBeNil)
 			So(err, ShouldBeNil)
 			stt := rst.InsertedID.(primitive.ObjectID).Hex()
@@ -33,10 +33,10 @@ func TestCreateAccount(t *testing.T) {
 			acct.DeleteByID(id)
 		})
 		Convey("Should return error When email duplicate with existing account", func() {
-			initAcct, err := createAccount("test123", "rstAbcd")
+			initAcct, err := createAccount("test123", "rstAbcd", true)
 			stt := initAcct.InsertedID.(primitive.ObjectID).Hex()
 			id, err := primitive.ObjectIDFromHex(stt)
-			rst, err := createAccount("test123", "rstAbcd")
+			rst, err := createAccount("test123", "rstAbcd", true)
 			So(rst, ShouldBeNil)
 			So(err, ShouldBeError)
 			conn.CollectionRegistry["Account"].New(acct)
@@ -65,6 +65,28 @@ func TestFindByID(t *testing.T) {
 			acct2, err := getAccountByID(fakeID.Hex())
 			So(acct2, ShouldBeZeroValue)
 			So(err, ShouldNotBeNil)
+		})
+		acct.DeleteByID(acct.ID)
+	})
+}
+
+func TestUpdateAccount(t *testing.T) {
+	Convey("Giving a db connection an init user", t, func() {
+		acct := &Account{}
+		conn := dao.GetConnection()
+		conn.Register(acct)
+		conn.CollectionRegistry["Account"].New(acct)
+		acct.Email = "test@test.com"
+		acct.Password = "password"
+		acct.InsertAccount()
+		Convey("Should updated document correctly", func() {
+			rst, err := updateAccount(acct.ID, "https://avatar/test/1234567", "1234567")
+			So(rst, ShouldNotBeNil)
+			So(err, ShouldBeNil)
+			So(rst.ModifiedCount, ShouldEqual, 1)
+			act, _ := getAccountByID(acct.ID.Hex())
+			So(act.Mobile, ShouldEqual, "1234567")
+			So(act.Avatar, ShouldEqual, "https://avatar/test/1234567")
 		})
 		acct.DeleteByID(acct.ID)
 	})
