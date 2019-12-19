@@ -1,4 +1,4 @@
-package role
+package team
 
 import (
 	"github.com/gin-gonic/gin"
@@ -6,8 +6,8 @@ import (
 
 //Register the sales APIs to root.
 func Register(router *gin.RouterGroup) {
-	saleRoutes := router.Group("/roles")
+	saleRoutes := router.Group("/teams")
 	{
-		saleRoutes.GET("", getRoles)
+		saleRoutes.GET("", getTeams)
 	}
 }

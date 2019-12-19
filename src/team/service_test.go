@@ -1,19 +1,17 @@
-package role
+package team
 
 import (
 	"testing"
-	"williamfeng323/mooncake-duty/src/dao"
-	"williamfeng323/mooncake-duty/src/utils"
 
 	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestGetRolesByRole(t *testing.T) {
 	Convey("Giving a role and a user binds with the role", t, func() {
-		db := &dao.Connection{}
-		db.InitConnection(nil, utils.GetConf().Mongo)
-		db.Register(&Role{})
-		db.Register(&Role{})
+		// db := &dao.Connection{}
+		// db.InitConnection(nil, utils.GetConf().Mongo)
+		// db.Register(&Role{})
+		// db.Register(&Role{})
 		Convey("Should return error When role does not exists", func() {
 			// role := Role{
 			// 	Name: "test role",

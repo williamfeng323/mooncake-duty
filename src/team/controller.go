@@ -1,4 +1,4 @@
-package role
+package team
 
 import (
 	"net/http"
@@ -10,7 +10,7 @@ type getAccountsParam struct {
 	RoleName string `json:"roleName"`
 }
 
-func getRoles(c *gin.Context) {
+func getTeams(c *gin.Context) {
 	sp := getAccountsParam{}
 	if err := c.ShouldBindQuery(&sp); err == nil {
 		// // revenueList := getSalesHistory(sp.Category, sp.Year)
