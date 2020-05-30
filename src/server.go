@@ -9,7 +9,7 @@ import (
 	"syscall"
 	"time"
 	"williamfeng323/mooncake-duty/src/account"
-	middleware "williamfeng323/mooncake-duty/src/middlewares"
+	middleware "williamfeng323/mooncake-duty/src/infrastructure/middlewares"
 
 	"github.com/gin-gonic/gin"
 )

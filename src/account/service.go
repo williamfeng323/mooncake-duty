@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"reflect"
 	"time"
-	"williamfeng323/mooncake-duty/src/dao"
+	dao "williamfeng323/mooncake-duty/src/infrastructure/db"
 	"williamfeng323/mooncake-duty/src/utils"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"

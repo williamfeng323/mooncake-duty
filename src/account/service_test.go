@@ -2,7 +2,7 @@ package account
 
 import (
 	"testing"
-	"williamfeng323/mooncake-duty/src/dao"
+	dao "williamfeng323/mooncake-duty/src/infrastructure/db"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 

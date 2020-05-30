@@ -3,7 +3,7 @@ package team
 import (
 	"testing"
 
-	"williamfeng323/mooncake-duty/src/dao"
+	dao "williamfeng323/mooncake-duty/src/infrastructure/db"
 	"williamfeng323/mooncake-duty/src/utils"
 
 	. "github.com/smartystreets/goconvey/convey"
