@@ -5,7 +5,7 @@ import (
 )
 
 //Register the account APIs to root.
-func Register(router *gin.RouterGroup) {
+func Register(router *gin.Engine) {
 	accountRoutes := router.Group("/accounts")
 	{
 		accountRoutes.PUT("", createAccountController)
