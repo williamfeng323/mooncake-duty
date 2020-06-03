@@ -8,7 +8,9 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
-	"williamfeng323/mooncake-duty/src/domains/account"
+	// "williamfeng323/mooncake-duty/src/domains/account"
+
+	webInterface "williamfeng323/mooncake-duty/src/interfaces/web"
 	middleware "williamfeng323/mooncake-duty/src/infrastructure/middlewares"
 
 	"github.com/gin-gonic/gin"
@@ -17,10 +19,8 @@ import (
 func main() {
 	router := gin.Default()
 	router.Use(middleware.Logger())
-	// router.GET("/test", func(c *gin.Context) {
-	// 	c.JSON(http.StatusOK, gin.H{"message": "Welcome Gin Server"})
-	// })
-	account.Register(router)
+
+	webInterface.RegisterAccountRoute(router)
 	srv := &http.Server{
 		Addr:    ":8080",
 		Handler: router,

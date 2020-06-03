@@ -1,4 +1,4 @@
-package team
+package project
 
 import (
 	"net/http"
@@ -6,12 +6,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type getAccountsParam struct {
+type GetAccountsParam struct {
 	RoleName string `json:"roleName"`
 }
 
-func getTeams(c *gin.Context) {
-	sp := getAccountsParam{}
+func GetTeams(c *gin.Context) {
+	sp := GetAccountsParam{}
 	if err := c.ShouldBindQuery(&sp); err == nil {
 		// // revenueList := getSalesHistory(sp.Category, sp.Year)
 		// c.JSON(http.StatusOK, revenueList)
