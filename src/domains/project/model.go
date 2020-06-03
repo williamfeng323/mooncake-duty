@@ -3,11 +3,13 @@ package project
 import (
 	"context"
 	"time"
-	dao "williamfeng323/mooncake-duty/src/infrastructure/db"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+
+	dao "williamfeng323/mooncake-duty/src/infrastructure/db"
+	"williamfeng323/mooncake-duty/src/domains/account"
 )
 
 // Permission the predefined permissions strings
@@ -46,28 +48,28 @@ type Member struct {
 	Tier      Tier               `json:"tier" bson:"tier"`
 }
 
-// Team is the struct to contain team information.
-type Team struct {
-	dao.BaseModel `json:",inline" bson:",inline"`
-	Name          string   `json:"name" bson:"name" required:"true"`
-	Description   string   `json:"description" bson:"description" required:"true"`
-	Members       []Member `json:"members" bson:"members"`
+// Project is the struct to contain project information.
+type Project struct {
+	dao.BaseModel 									`json:",inline" bson:",inline"`
+	Name          string   					`json:"name" bson:"name" required:"true"`
+	Description   string   					`json:"description" bson:"description" required:"true"`
+	Members       []account.Account `json:"members" bson:"members"`
 }
 
-// InsertTeam create a new team document in mongoDB with
+// CreateProject create a new project document in mongoDB with
 // initial createdAt and _id
-func (team *Team) InsertTeam() (*mongo.InsertOneResult, error) {
-	validationErrors := team.DefaultValidator()
+func (project *Project) CreateProject() (*mongo.InsertOneResult, error) {
+	validationErrors := project.DefaultValidator()
 	if validationErrors != nil {
 		return nil, validationErrors[0]
 	}
-	team.CreatedAt = time.Now()
-	team.ID = primitive.NewObjectID()
-	bTeam, err := bson.Marshal(team)
+	project.CreatedAt = time.Now()
+	project.ID = primitive.NewObjectID()
+	bProject, err := bson.Marshal(project)
 	if err != nil {
 		return nil, err
 	}
 	ctx, cancelFunc := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancelFunc()
-	return team.GetCollection().InsertOne(ctx, bTeam)
+	return project.GetCollection().InsertOne(ctx, bProject)
 }
