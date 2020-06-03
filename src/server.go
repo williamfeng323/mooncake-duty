@@ -8,7 +8,7 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
-	"williamfeng323/mooncake-duty/src/account"
+	"williamfeng323/mooncake-duty/src/domains/account"
 	middleware "williamfeng323/mooncake-duty/src/infrastructure/middlewares"
 
 	"github.com/gin-gonic/gin"

@@ -21,7 +21,7 @@ func TestInsertAccount(t *testing.T) {
 			So(err, ShouldNotBeNil)
 			So(rst, ShouldBeNil)
 		})
-		Convey("insert account with valid data", func() {
+		SkipConvey("insert account with valid data", func() {
 			acct := &Account{}
 			db.CollectionRegistry["Account"].New(acct)
 			acct.Email = "test@abc.com"

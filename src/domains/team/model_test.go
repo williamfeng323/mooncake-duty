@@ -21,7 +21,7 @@ func TestInsertTeam(t *testing.T) {
 			So(err, ShouldNotBeNil)
 			So(rst, ShouldBeNil)
 		})
-		Convey("insert team with valid data should success", func() {
+		SkipConvey("insert team with valid data should success", func() {
 			team := &Team{}
 			db.CollectionRegistry["Team"].New(team)
 			team.Name = "Admin"
