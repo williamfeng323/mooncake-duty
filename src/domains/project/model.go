@@ -8,8 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 
-	dao "williamfeng323/mooncake-duty/src/infrastructure/db"
-	"williamfeng323/mooncake-duty/src/domains/account"
+	db "williamfeng323/mooncake-duty/src/infrastructure/db"
 )
 
 // Permission the predefined permissions strings
@@ -17,6 +16,9 @@ type Permission string
 
 // Tier is the support level of a team member.
 type Tier string
+
+// Severity describe the level of the alarm.
+type Severity int
 
 const (
 	// Create predefined permission mode, create permission
@@ -35,25 +37,31 @@ const (
 	T3 Tier = "T3"
 )
 
-//Role the role struct type for account.
-type Role struct {
-	Name        string       `json:"name" bson:"name" required:"true"`
-	Authorities []Permission `json:"authorities" bson:"authorities" required:"true"`
-}
+const (
+	// High represents the most serious issue, must be handle asap
+	High Severity = iota
+	// Medium represents the medium level issue, you might not need to escalate
+	Medium
+	// Low could be follow up later
+	Low
+)
 
-// Member is the struct to contain member information
-type Member struct {
-	AccountID primitive.ObjectID `json:"accountId" bson:"accountId"`
-	Role      Role               `json:"role" bson:"role"`
-	Tier      Tier               `json:"tier" bson:"tier"`
+// Alarm defines the struct of an alarm
+type Alarm struct {
+	ID          primitive.ObjectID `json:"id" bson:"id"`
+	Name        string             `json:"name" bson:"name"`
+	Description string             `json:"description" bson:"description"`
+	Severity    `json:"severity" bson:"severity"`
 }
 
 // Project is the struct to contain project information.
 type Project struct {
-	dao.BaseModel 									`json:",inline" bson:",inline"`
-	Name          string   					`json:"name" bson:"name" required:"true"`
-	Description   string   					`json:"description" bson:"description" required:"true"`
-	Members       []account.Account `json:"members" bson:"members"`
+	db.BaseModel  `json:",inline" bson:",inline"`
+	Name          string               `json:"name" bson:"name" required:"true"`
+	Description   string               `json:"description" bson:"description" required:"true"`
+	Members       []primitive.ObjectID `json:"members" bson:"members"`
+	ProjectAdmins []primitive.ObjectID `json:"projectAdmins" bson:"projectAdmins"`
+	Alarms        []Alarm              `json:"alarms" bson:"alarms"` // AlarmLog would be needed
 }
 
 // CreateProject create a new project document in mongoDB with
