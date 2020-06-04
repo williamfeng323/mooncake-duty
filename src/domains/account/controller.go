@@ -13,7 +13,7 @@ type basicAccountsParam struct {
 	IsAdmin  bool   `json:"isAdmin" binding:"required"`
 }
 
-func createAccountController(c *gin.Context) {
+func CreateAccountController(c *gin.Context) {
 	sp := basicAccountsParam{}
 	if err := c.ShouldBind(&sp); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -28,14 +28,14 @@ func createAccountController(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"id": id.String()})
 }
 
-type updateAccountParam struct {
+type UpdateAccountParam struct {
 	Avatar string `json:"email"`
 	Mobile string `json:"mobile"`
 }
 
-func updateAccountController(c *gin.Context) {
+func UpdateAccountController(c *gin.Context) {
 	var id string
-	sp := updateAccountParam{}
+	sp := UpdateAccountParam{}
 
 	if err := c.ShouldBindUri(&id); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -56,7 +56,7 @@ func updateAccountController(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"modifiedCount": rst.ModifiedCount})
 }
 
-func getAccountByIDController(c *gin.Context) {
+func GetAccountByIDController(c *gin.Context) {
 	var id string
 	if err := c.ShouldBindUri(&id); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -68,7 +68,7 @@ func getAccountByIDController(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 
-func loginController(c *gin.Context) {
+func LoginController(c *gin.Context) {
 	sp := basicAccountsParam{}
 	if err := c.ShouldBind(&sp); err != nil {
 		c.Status(http.StatusBadRequest)
@@ -82,12 +82,12 @@ func loginController(c *gin.Context) {
 	return
 }
 
-type refreshParam struct {
+type RefreshParam struct {
 	Token string `json:"token"`
 }
 
-func refreshController(c *gin.Context) {
-	params := refreshParam{}
+func RefreshController(c *gin.Context) {
+	params := RefreshParam{}
 	if err := c.ShouldBind(&params); err != nil {
 		c.Status(http.StatusBadRequest)
 		return
