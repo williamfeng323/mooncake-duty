@@ -17,7 +17,7 @@ func TestInsertTeam(t *testing.T) {
 		Convey("insert team with empty data should return error", func() {
 			project := &Project{}
 			db.CollectionRegistry["Team"].New(project)
-			rst, err := project.CreateProject()
+			rst, err := project.InsertProject()
 			So(err, ShouldNotBeNil)
 			So(rst, ShouldBeNil)
 		})
@@ -26,7 +26,7 @@ func TestInsertTeam(t *testing.T) {
 			db.CollectionRegistry["Team"].New(project)
 			project.Name = "Admin"
 			project.Description = "Admin team"
-			rst, err := project.CreateProject()
+			rst, err := project.InsertProject()
 			So(err, ShouldBeNil)
 			So(rst, ShouldNotBeNil)
 			project.DeleteByID(project.ID)

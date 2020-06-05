@@ -64,9 +64,9 @@ type Project struct {
 	Alarms        []Alarm              `json:"alarms" bson:"alarms"` // AlarmLog would be needed
 }
 
-// CreateProject create a new project document in mongoDB with
+// InsertProject create a new project document in mongoDB with
 // initial createdAt and _id
-func (project *Project) CreateProject() (*mongo.InsertOneResult, error) {
+func (project *Project) InsertProject() (*mongo.InsertOneResult, error) {
 	validationErrors := project.DefaultValidator()
 	if validationErrors != nil {
 		return nil, validationErrors[0]
