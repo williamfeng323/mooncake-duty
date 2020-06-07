@@ -3,30 +3,23 @@ package project
 import (
 	"testing"
 
-	. "github.com/smartystreets/goconvey/convey"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func TestGetRolesByRole(t *testing.T) {
-	Convey("Giving a role and a user binds with the role", t, func() {
-		// db := &dao.Connection{}
-		// db.InitConnection(nil, utils.GetConf().Mongo)
-		// db.Register(&Role{})
-		// db.Register(&Role{})
-		Convey("Should return error When role does not exists", func() {
-			// role := Role{
-			// 	Name: "test role",
-			// }
-			// rst, err := getRolesByRole(role.Name)
-			// So(rst, ShouldBeNil)
-			// So(err, ShouldBeError)
-		})
-		Convey("Should return accounts When role exists", func() {
-			// role := Role{
-			// 	Name: "developer",
-			// }
-			// rst, err := getRolesByRole(role.Name)
-			// So(rst, ShouldNotBeNil)
-			// So(err, ShouldBeNil)
+func TestModel(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "Project domain Suite")
+}
+
+var _ = Describe("Project", func() {
+	Describe("#NewProject", func() {
+		It("should return a project instance", func() {
+			project1 := NewProject("Test", "This is a test project", Member{primitive.NewObjectID(), true})
+			Expect(project1).NotTo(BeNil())
+			project2 := NewProject("Test", "This is a test project")
+			Expect(project2).NotTo(BeNil())
 		})
 	})
-}
+})

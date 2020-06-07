@@ -5,8 +5,11 @@ go 1.14
 require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gin-gonic/gin v1.6.3
+	github.com/golang/mock v1.3.1
 	github.com/google/go-cmp v0.4.1 // indirect
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
+	github.com/onsi/ginkgo v1.12.3
+	github.com/onsi/gomega v1.10.1
 	github.com/pelletier/go-toml v1.8.0 // indirect
 	github.com/smartystreets/goconvey v1.6.4
 	github.com/spf13/afero v1.2.2 // indirect
@@ -18,6 +21,6 @@ require (
 	go.mongodb.org/mongo-driver v1.3.3
 	golang.org/x/crypto v0.0.0-20200510223506-06a226fb4e37 // indirect
 	golang.org/x/sync v0.0.0-20200317015054-43a5402ce75a // indirect
-	golang.org/x/sys v0.0.0-20200323222414-85ca7c5b95cd // indirect
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
+	gopkg.in/mgo.v2 v2.0.0-20190816093944-a6b53ec6cb22
 )
