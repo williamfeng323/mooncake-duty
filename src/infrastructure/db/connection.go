@@ -14,17 +14,16 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-//Collection is the struct to contain correlated collection connection
-//and also the collection operate
-type Collection struct {
-	*mongo.Collection
+type collectionRegistry struct {
+	registries map[string]*mongo.Collection
+	lock       sync.Mutex
 }
 
 //Connection provide the client to connect the database
 type Connection struct {
-	Database           string
-	Client             *mongo.Client
-	CollectionRegistry map[string]*Collection
+	Database string
+	Client   *mongo.Client
+	*collectionRegistry
 }
 
 // InitConnection initial the connection to the database
@@ -48,55 +47,47 @@ func (conn *Connection) InitConnection(ctx context.Context, config utils.MongoCo
 	}
 	conn.Database = config.Database
 	conn.Client = client
-	conn.CollectionRegistry = map[string]*Collection{}
+	conn.collectionRegistry = &collectionRegistry{registries: map[string]*mongo.Collection{}}
 	return nil
 }
 
-//Register will register the collection connection to the Connection.
-// Before you can operate your model, you must register it.
-func (conn *Connection) Register(document IDocumentBase) {
+//Register will create the collection connection registered it to the connection.
+// Before you can operate your repo, you must register it.
+func (conn *Connection) register(repo Repository) {
 
-	if document == nil {
-		panic("document can not be nil")
+	if repo == nil {
+		panic("repo can not be nil")
 	}
 
-	reflectType := reflect.TypeOf(document)
-	typeName := reflectType.Elem().Name()
+	repoName := repo.GetName()
 
+	conn.collectionRegistry.lock.Lock()
+	defer conn.collectionRegistry.lock.Unlock()
 	// check if model was already registered, if not, register the model
 	// into CollectionRegistry[modelName]
-	if _, ok := conn.CollectionRegistry[typeName]; !ok {
-		collection := &Collection{
-			conn.Client.Database(conn.Database).Collection(typeName)}
-		conn.CollectionRegistry[typeName] = collection
-		fmt.Printf("Registered collection '%v'", typeName)
+	if _, ok := conn.collectionRegistry.registries[repoName]; !ok {
+		collection := conn.Client.Database(conn.Database).Collection(repoName)
+		conn.collectionRegistry.registries[repoName] = collection
+		fmt.Printf("Registered collection '%v'", repoName)
 	} else {
-		fmt.Printf("Tried to register collection '%v' twice", typeName)
+		fmt.Printf("Tried to register collection '%v' twice", repoName)
 	}
 }
 
-// GetCollection returns the registered collection
-func (conn *Connection) GetCollection(collectionName string) *Collection {
-	if collection, ok := conn.CollectionRegistry[collectionName]; ok {
+// GetCollection returns the registered repo's collection instance
+func (conn *Connection) GetCollection(repositoryName string) *mongo.Collection {
+	if collection, ok := conn.collectionRegistry.registries[repositoryName]; ok {
 		return collection
-	} else {
-		panic("Account does not registered to the DB")
 	}
-}
-
-// New return a document instance
-// To new a document, you should follow below steps:
-// connection.Register(&User{})
-// user := &User{}
-// connection.CollectionRegistry["User"].New(user)
-func (coll *Collection) New(doc IDocumentBase) error {
-	doc.SetCollection(coll.Collection)
-	doc.SetDocument(doc)
-	return nil
+	panic("repository does not registered, please call GetConnection().Register(repo) to register")
 }
 
 var connection Connection
 var lock sync.RWMutex
+
+func init() {
+	GetConnection()
+}
 
 //GetConnection return the initted DB connection struct
 func GetConnection() *Connection {
@@ -108,4 +99,11 @@ func GetConnection() *Connection {
 		return &connection
 	}
 	return &connection
+}
+
+// Register creates and registers the repo's collection to the global connection
+func Register(repo Repository) {
+	lock.Lock()
+	defer lock.Unlock()
+	connection.register(repo)
 }

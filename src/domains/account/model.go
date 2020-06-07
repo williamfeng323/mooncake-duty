@@ -1,13 +1,9 @@
 package account
 
 import (
-	"context"
-	"time"
 	dao "williamfeng323/mooncake-duty/src/infrastructure/db"
 
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // SentHook is the structure to describe the alternative way to send the alarms.
@@ -33,22 +29,4 @@ type Account struct {
 	Avatar         string               `json:"avatar,omitempty" bson:"avatar,omitempty"`
 	Teams          []primitive.ObjectID `json:"teams,omitempty" bson:"teams, omitempty"`
 	ContactMethods `json:"contactMethods,omitempty" bson:"contactMethods,omitempty"`
-}
-
-// InsertAccount create a new document in mongoDB with
-// initial createdAt and _id
-func (acct *Account) InsertAccount() (*mongo.InsertOneResult, error) {
-	validationErrors := acct.DefaultValidator()
-	if validationErrors != nil {
-		return nil, validationErrors[0]
-	}
-	acct.CreatedAt = time.Now()
-	acct.ID = primitive.NewObjectID()
-	bAcct, err := bson.Marshal(acct)
-	if err != nil {
-		return nil, err
-	}
-	ctx, cancelFunc := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancelFunc()
-	return acct.GetCollection().InsertOne(ctx, bAcct)
 }
