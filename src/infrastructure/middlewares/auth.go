@@ -11,6 +11,7 @@ import (
 )
 
 // Auth middleware to check the request is authorized.
+// TO-DO
 func Auth() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		t := time.Now()

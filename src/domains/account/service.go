@@ -2,117 +2,17 @@ package account
 
 import (
 	"fmt"
+	"reflect"
 
-	db "williamfeng323/mooncake-duty/src/infrastructure/db"
 	repoimpl "williamfeng323/mooncake-duty/src/infrastructure/db/repo_impl"
 	"williamfeng323/mooncake-duty/src/utils"
 
 	"go.mongodb.org/mongo-driver/bson"
 )
 
-// import (
-// 	"net/http"
-
-// 	"github.com/gin-gonic/gin"
-// 	"go.mongodb.org/mongo-driver/bson/primitive"
-// )
-
-// type basicAccountsParam struct {
-// 	Email    string `json:"email" binding:"required"`
-// 	Password string `json:"password" binding:"required"`
-// 	IsAdmin  bool   `json:"isAdmin" binding:"required"`
-// }
-
-// func CreateAccountController(c *gin.Context) {
-// 	sp := basicAccountsParam{}
-// 	if err := c.ShouldBind(&sp); err != nil {
-// 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-// 		return
-// 	}
-// 	createResult, err := createAccount(sp.Email, sp.Password, sp.IsAdmin)
-// 	if err != nil {
-// 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-// 		return
-// 	}
-// 	id := createResult.InsertedID.(primitive.ObjectID)
-// 	c.JSON(http.StatusOK, gin.H{"id": id.String()})
-// }
-
-// type UpdateAccountParam struct {
-// 	Avatar string `json:"email"`
-// 	Mobile string `json:"mobile"`
-// }
-
-// func UpdateAccountController(c *gin.Context) {
-// 	var id string
-// 	sp := UpdateAccountParam{}
-
-// 	if err := c.ShouldBindUri(&id); err != nil {
-// 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-// 	}
-// 	if err := c.ShouldBind(&sp); err != nil {
-// 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-// 		return
-// 	}
-// 	convertedID, err := primitive.ObjectIDFromHex(id)
-// 	if err != nil {
-// 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-// 	}
-// 	rst, err := updateAccount(convertedID, sp.Avatar, sp.Mobile)
-// 	if err != nil {
-// 		c.JSON(http.StatusNotModified, gin.H{"error": err.Error()})
-// 		return
-// 	}
-// 	c.JSON(http.StatusOK, gin.H{"modifiedCount": rst.ModifiedCount})
-// }
-
-// func GetAccountByIDController(c *gin.Context) {
-// 	var id string
-// 	if err := c.ShouldBindUri(&id); err != nil {
-// 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-// 	}
-// 	user, err := getAccountByID(id)
-// 	if err != nil {
-// 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
-// 	}
-// 	c.JSON(http.StatusOK, user)
-// }
-
-// func LoginController(c *gin.Context) {
-// 	sp := basicAccountsParam{}
-// 	if err := c.ShouldBind(&sp); err != nil {
-// 		c.Status(http.StatusBadRequest)
-// 	}
-// 	tokenString, err := signIn(sp.Email, sp.Password)
-// 	if err != nil {
-// 		c.JSON(http.StatusUnauthorized, gin.H{"error": err})
-// 		return
-// 	}
-// 	c.JSON(http.StatusOK, gin.H{"token": tokenString})
-// 	return
-// }
-
-// type RefreshParam struct {
-// 	Token string `json:"token"`
-// }
-
-// func RefreshController(c *gin.Context) {
-// 	params := RefreshParam{}
-// 	if err := c.ShouldBind(&params); err != nil {
-// 		c.Status(http.StatusBadRequest)
-// 		return
-// 	}
-// 	refreshedToken, err := refresh(params.Token)
-// 	if err != nil {
-// 		c.JSON(http.StatusUnauthorized, gin.H{"error": err})
-// 		return
-// 	}
-// 	c.JSON(http.StatusOK, gin.H{"token": refreshedToken})
-// }
-
 // Service exposes the account service
 type Service struct {
-	repo db.Repository
+	repo *repoimpl.AccountRepo
 }
 
 // SetRepo set the account repository to the service
@@ -128,7 +28,7 @@ func (as *Service) SignIn(email string, password string) (string, error) {
 	acct := &Account{}
 	result.Decode(acct)
 	if acct.ID.IsZero() {
-		return "", fmt.Errorf("Account does not exist")
+		return "", NotFoundError{}
 	}
 	decryptedPassword, err := utils.Decrypt(acct.Password)
 	if err != nil {
@@ -154,4 +54,79 @@ func (as *Service) Register(email string, password string, isAdmin bool) (string
 	}
 	token, err := utils.SignToken(acct.Email)
 	return token, err
+}
+
+// UpdateContactMethods update the ways to send notification
+// you empty value will not be update into the account.
+func (as *Service) UpdateContactMethods(originEmail string, cm ContactMethods, email string, mobile string) error {
+
+	account, err := as.GetAccount(originEmail)
+	if err != nil {
+		return err
+	}
+	valueSet := bson.M{}
+	if email != "" {
+		valueSet["email"] = email
+	}
+	if mobile != "" {
+		valueSet["mobile"] = mobile
+	}
+	if cm.SentEmail && account.Email == "" {
+		return fmt.Errorf("Email must be set before you active send email notification")
+	}
+	if cm.SentSMS && account.Mobile == "" && mobile == "" {
+		return fmt.Errorf("Mobile must be set before you active send email notification")
+	}
+	if !reflect.DeepEqual(cm, reflect.Zero(reflect.TypeOf(cm)).Interface()) {
+		var cmMap bson.D
+		originalCm, _ := bson.Marshal(account.ContactMethods)
+		bson.Unmarshal(originalCm, &cmMap)
+		updatedCm, _ := bson.Marshal(cm)
+		bson.Unmarshal(updatedCm, &cmMap)
+		valueSet["contactMethods"] = cmMap
+	}
+	if len(valueSet) == 0 {
+		return fmt.Errorf("Nothing needs to be updated")
+	}
+	ctx, cancel := utils.GetDefaultCtx()
+	defer cancel()
+	_, err = as.repo.UpdateOne(ctx, bson.M{"_id": account.ID}, bson.M{"$set": valueSet})
+	return err
+}
+
+// GrantSystemAdmin grants system admin auth to user
+func (as *Service) GrantSystemAdmin(email string) error {
+	account, err := as.GetAccount(email)
+	if err != nil {
+		return err
+	}
+	ctx, cancel := utils.GetDefaultCtx()
+	defer cancel()
+	_, err = as.repo.UpdateOne(ctx, bson.M{"_id": account.ID}, bson.M{"$set": bson.M{"isAdmin": true}})
+	return err
+}
+
+// DeactivateAccount logically deletes the account
+func (as *Service) DeactivateAccount(email string) error {
+	account, err := as.GetAccount(email)
+	if err != nil {
+		return err
+	}
+	ctx, cancel := utils.GetDefaultCtx()
+	defer cancel()
+	_, err = as.repo.UpdateOne(ctx, bson.M{"_id": account.ID}, bson.M{"$set": bson.M{"deleted": true}})
+	return err
+}
+
+// GetAccount returns the existing account
+func (as *Service) GetAccount(email string) (*Account, error) {
+	ctx, cancel := utils.GetDefaultCtx()
+	defer cancel()
+	rst := as.repo.FindOne(ctx, bson.M{"email": email})
+	account := &Account{}
+	rst.Decode(account)
+	if account.ID.IsZero() {
+		return nil, NotFoundError{}
+	}
+	return account, nil
 }

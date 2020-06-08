@@ -22,8 +22,8 @@ type SentHook struct {
 // ContactMethods is describing the way to contact user
 type ContactMethods struct {
 	SentHook  `json:"sentHook" bson:"sentHook"`
-	SentSMS   bool `json:"sentSMS,omitempty" bson:"sentSMS,omitempty"`
-	SentEmail bool `json:"sentEmail,omitempty" bson:"sentEmail,omitempty"`
+	SentSMS   bool `json:"sentSMS" bson:"sentSMS"`
+	SentEmail bool `json:"sentEmail" bson:"sentEmail"`
 }
 
 // Account struct of the user account
@@ -34,8 +34,7 @@ type Account struct {
 	Password       string               `json:"password" bson:"password" required:"true"`
 	Mobile         string               `json:"mobile,omitempty" bson:"mobile,omitempty"`
 	IsAdmin        bool                 `json:"isAdmin" bson:"isAdmin"`
-	Avatar         string               `json:"avatar,omitempty" bson:"avatar,omitempty"`
-	Teams          []primitive.ObjectID `json:"teams,omitempty" bson:"teams, omitempty"`
+	Projects       []primitive.ObjectID `json:"projects,omitempty" bson:"projects, omitempty"`
 	ContactMethods `json:"contactMethods,omitempty" bson:"contactMethods,omitempty"`
 }
 
@@ -85,32 +84,10 @@ func (acct *Account) Save(allowReplace bool) (int, error) {
 			return 0, err
 		}
 	} else {
-		return 0, fmt.Errorf("Account already exist")
+		return 0, AlreadyExistError{}
 	}
 	return 1, nil
 }
-
-// func signIn(email string, password string) (string, error) {
-// 	acct := &Account{}
-// 	conn := db.GetConnection()
-// 	acctModel := conn.GetCollection("Account")
-// 	acctModel.New(acct)
-// 	ctx, cancelFunc := context.WithTimeout(context.Background(), 30*time.Second)
-// 	defer cancelFunc()
-// 	cursor := acctModel.FindOne(ctx, bson.M{
-// 		"email":    email,
-// 		"password": password,
-// 	})
-// 	err := cursor.Decode(acct)
-// 	if err != nil {
-// 		return "", err
-// 	}
-// 	jwt, err := utils.SignToken(acct.Email)
-// 	if err != nil {
-// 		return "", err
-// 	}
-// 	return jwt, nil
-// }
 
 // func refresh(tokenString string) (string, error) {
 // 	claims, err := utils.VerifyToken(tokenString)

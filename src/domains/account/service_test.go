@@ -46,7 +46,7 @@ var _ = Describe("AccountService", func() {
 			It("should return error", func() {
 				rst, err := acctSrv.SignIn("test1@test.com", "12345test")
 				Expect(rst).To(Equal(""))
-				Expect(err.Error()).To(Equal("Account does not exist"))
+				Expect(err.Error()).To(Equal("Account Not Found"))
 			})
 		})
 	})
@@ -64,6 +64,45 @@ var _ = Describe("AccountService", func() {
 				Expect(rst).ToNot(BeNil())
 				Expect(err).To(BeNil())
 				repo.DeleteOne(context.Background(), bson.M{"email": "test1@test.com"})
+			})
+		})
+	})
+	Describe("#UpdateContactMethods", func() {
+		Context("call with exist account", func() {
+			Context("update partial ContactMethods", func() {
+				It("should throw error if enable sendSMS when no mobile set", func() {
+					cm := ContactMethods{SentSMS: true}
+					err := acctSrv.UpdateContactMethods("test@test.com", cm, "", "")
+					Expect(err.Error()).To(Equal("Mobile must be set before you active send email notification"))
+				})
+				It("should update the contactMethods", func() {
+					cm := ContactMethods{SentSMS: true}
+					cm.SentHook = SentHook{
+						URL: "http://fake.com/sofake",
+					}
+					err := acctSrv.UpdateContactMethods("test@test.com", cm, "", "12345678910")
+					Expect(err).To(BeNil())
+				})
+			})
+			Context("when existing account has contactMethods", func() {
+				It("Should update the account without error", func() {
+					acct, _ := NewAccount("test@test.com", "12345test")
+					acct.ContactMethods.SentEmail = true
+					acct.Mobile = "12345678910"
+					acct.Save(true)
+					cm := ContactMethods{SentSMS: true, SentEmail: false}
+					cm.SentHook = SentHook{
+						URL: "http://fake.com/sofake",
+					}
+					err := acctSrv.UpdateContactMethods("test@test.com", cm, "", "")
+					Expect(err).To(BeNil())
+				})
+			})
+		})
+		Context("call with non-exist account", func() {
+			It("should return error", func() {
+				err := acctSrv.UpdateContactMethods("test2@test.com", ContactMethods{}, "", "")
+				Expect(err).ToNot(BeNil())
 			})
 		})
 	})
