@@ -19,6 +19,7 @@ type Repository interface {
 	SetCollection(*mongo.Collection)
 	InsertOne(context.Context, interface{}, ...*options.InsertOneOptions) (*mongo.InsertOneResult, error)
 	Find(context.Context, interface{}, ...*options.FindOptions) (*mongo.Cursor, error)
+	FindOne(context.Context, interface{}, ...*options.FindOneOptions) *mongo.SingleResult
 	UpdateOne(context.Context, interface{}, interface{}, ...*options.UpdateOptions) (*mongo.UpdateResult, error)
 	DeleteOne(context.Context, interface{}, ...*options.DeleteOptions) (*mongo.DeleteResult, error)
 }

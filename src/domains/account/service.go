@@ -1,5 +1,17 @@
 package account
 
+import (
+	"context"
+	"fmt"
+	"time"
+
+	db "williamfeng323/mooncake-duty/src/infrastructure/db"
+	repoimpl "williamfeng323/mooncake-duty/src/infrastructure/db/repo_impl"
+	"williamfeng323/mooncake-duty/src/utils"
+
+	"go.mongodb.org/mongo-driver/bson"
+)
+
 // import (
 // 	"net/http"
 
@@ -99,3 +111,35 @@ package account
 // 	}
 // 	c.JSON(http.StatusOK, gin.H{"token": refreshedToken})
 // }
+
+// Service exposes the account service
+type Service struct {
+	repo db.Repository
+}
+
+// SetRepo set the account repository to the service
+func (as *Service) SetRepo(repo *repoimpl.AccountRepo) {
+	as.repo = repo
+}
+
+// SignIn validate the email password pair and return token
+func (as *Service) SignIn(email string, password string) (string, error) {
+	timeout, err := time.ParseDuration(fmt.Sprintf("%ds", utils.GetConf().Mongo.DefaultTimeout))
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	result := as.repo.FindOne(ctx, bson.M{"email": email})
+	acct := &Account{}
+	result.Decode(acct)
+	if acct.ID.IsZero() {
+		return "", fmt.Errorf("Account does not exist")
+	}
+	decryptedPassword, err := utils.Decrypt(acct.Password)
+	if err != nil {
+		return "", err
+	}
+	if string(decryptedPassword) != password {
+		return "", fmt.Errorf("Password and account does not match")
+	}
+	token, err := utils.SignToken(acct.Email)
+	return token, err
+}
