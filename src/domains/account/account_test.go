@@ -25,7 +25,7 @@ var _ = Describe("Account", func() {
 			It("should insert the account to DB directly", func() {
 				acct, err := NewAccount("test@test.com", "12345test")
 				Expect(err).To(BeNil())
-				rst, err := acct.Save()
+				rst, err := acct.Save(true)
 				Expect(err).To(BeNil())
 				Expect(rst).To(Equal(1))
 			})
@@ -33,10 +33,10 @@ var _ = Describe("Account", func() {
 		Context("When database has record in same email", func() {
 			It("should update the account to DB directly", func() {
 				acct, err := NewAccount("test@test.com", "12345test")
-				acct.Save()
+				acct.Save(true)
 				acct2, _ := NewAccount("test@test.com", "12345test")
 				acct2.IsAdmin = true
-				rst, err := acct2.Save()
+				rst, err := acct2.Save(true)
 				dbAcct := &Account{}
 				rst2 := repo.FindOne(context.Background(), bson.M{"email": "test@test.com"})
 				rst2.Decode(dbAcct)

@@ -22,7 +22,7 @@ var _ = Describe("AccountService", func() {
 	BeforeEach(func() {
 		acct2, _ := NewAccount("test@test.com", "12345test")
 		acct2.IsAdmin = true
-		acct2.Save()
+		acct2.Save(true)
 	})
 	AfterEach(func() {
 		repo.DeleteOne(context.Background(), bson.M{"email": "test@test.com"})
@@ -47,6 +47,23 @@ var _ = Describe("AccountService", func() {
 				rst, err := acctSrv.SignIn("test1@test.com", "12345test")
 				Expect(rst).To(Equal(""))
 				Expect(err.Error()).To(Equal("Account does not exist"))
+			})
+		})
+	})
+	Describe("#Register", func() {
+		Context("call with exist email", func() {
+			It("should return error", func() {
+				rst, err := acctSrv.Register("test@test.com", "12345test", true)
+				Expect(rst).To(Equal(""))
+				Expect(err.Error()).To(Equal("Account already exist"))
+			})
+		})
+		Context("call with non-exist email", func() {
+			It("should return jwt token", func() {
+				rst, err := acctSrv.Register("test1@test.com", "12345test", true)
+				Expect(rst).ToNot(BeNil())
+				Expect(err).To(BeNil())
+				repo.DeleteOne(context.Background(), bson.M{"email": "test1@test.com"})
 			})
 		})
 	})

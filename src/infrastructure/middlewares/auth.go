@@ -10,18 +10,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type bodyLogWriter struct {
-	gin.ResponseWriter
-	body *bytes.Buffer
-}
-
-func (w bodyLogWriter) Write(b []byte) (int, error) {
-	w.body.Write(b)
-	return w.ResponseWriter.Write(b)
-}
-
-// Logger middleware to log request before and after.
-func Logger() gin.HandlerFunc {
+// Auth middleware to check the request is authorized.
+func Auth() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		t := time.Now()
 

@@ -1,9 +1,7 @@
 package account
 
 import (
-	"context"
 	"fmt"
-	"time"
 
 	db "williamfeng323/mooncake-duty/src/infrastructure/db"
 	repoimpl "williamfeng323/mooncake-duty/src/infrastructure/db/repo_impl"
@@ -124,8 +122,7 @@ func (as *Service) SetRepo(repo *repoimpl.AccountRepo) {
 
 // SignIn validate the email password pair and return token
 func (as *Service) SignIn(email string, password string) (string, error) {
-	timeout, err := time.ParseDuration(fmt.Sprintf("%ds", utils.GetConf().Mongo.DefaultTimeout))
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := utils.GetDefaultCtx()
 	defer cancel()
 	result := as.repo.FindOne(ctx, bson.M{"email": email})
 	acct := &Account{}
@@ -139,6 +136,21 @@ func (as *Service) SignIn(email string, password string) (string, error) {
 	}
 	if string(decryptedPassword) != password {
 		return "", fmt.Errorf("Password and account does not match")
+	}
+	token, err := utils.SignToken(acct.Email)
+	return token, err
+}
+
+// Register creates the basic account
+func (as *Service) Register(email string, password string, isAdmin bool) (string, error) {
+	acct, err := NewAccount(email, password)
+	acct.IsAdmin = isAdmin
+	if err != nil {
+		return "", err
+	}
+	_, err = acct.Save(false)
+	if err != nil {
+		return "", err
 	}
 	token, err := utils.SignToken(acct.Email)
 	return token, err
