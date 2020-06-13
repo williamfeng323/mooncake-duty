@@ -28,7 +28,7 @@ type ContactMethods struct {
 
 // Account struct of the user account
 type Account struct {
-	repo           db.Repository
+	repo           *repoimpl.AccountRepo
 	db.BaseModel   `json:",inline" bson:",inline"`
 	Email          string               `json:"email" bson:"email" required:"true"`
 	Password       string               `json:"password" bson:"password" required:"true"`
@@ -61,8 +61,7 @@ func (acct *Account) Save(allowReplace bool) (int, error) {
 	}
 	ctx, cancel := utils.GetDefaultCtx()
 	defer cancel()
-
-	rst := acct.repo.FindOne(ctx, bson.M{"email": acct.Email})
+	rst := acct.repo.FindOne(ctx, acct.repo.EmailFilter(acct.Email))
 	tempAcct := &Account{}
 	rst.Decode(tempAcct)
 
@@ -78,7 +77,7 @@ func (acct *Account) Save(allowReplace bool) (int, error) {
 		inrec, _ := bson.Marshal(acct)
 		bson.Unmarshal(inrec, &inInterface)
 		delete(inInterface, "_id")
-		rst, err := acct.repo.UpdateOne(ctx, bson.M{"email": acct.Email}, bson.M{"$set": inInterface})
+		rst, err := acct.repo.UpdateOne(ctx, acct.repo.EmailFilter(acct.Email), bson.M{"$set": inInterface})
 		print(rst.MatchedCount)
 		if err != nil {
 			return 0, err

@@ -1,14 +1,18 @@
 package project
 
 import (
+	"fmt"
+	"strings"
+	"time"
+	repoimpl "williamfeng323/mooncake-duty/src/infrastructure/db/repo_impl"
+	"williamfeng323/mooncake-duty/src/utils"
+
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
-	"strings"
 	db "williamfeng323/mooncake-duty/src/infrastructure/db"
+	validatorimpl "williamfeng323/mooncake-duty/src/infrastructure/db/validator_impl"
 )
-
-// Permission the predefined permissions strings
-type Permission string
 
 // Tier is the support level of a team member.
 type Tier string
@@ -17,14 +21,6 @@ type Tier string
 type Severity int
 
 const (
-	// Create predefined permission mode, create permission
-	Create Permission = "create"
-	// Read predefined permission mode, read permission
-	Read Permission = "read"
-	// Update predefined permission mode, update permission
-	Update Permission = "update"
-	// Delete predefined permission mode, deleted permission
-	Delete Permission = "delete"
 	// T1 predefined tier level
 	T1 Tier = "T1"
 	// T2 predefined tier level
@@ -58,6 +54,7 @@ type Member struct {
 
 // Project is the struct to contain project information.
 type Project struct {
+	repo         *repoimpl.ProjectRepo
 	db.BaseModel `json:",inline" bson:",inline"`
 	Name         string   `json:"name" bson:"name" required:"true"`
 	Description  string   `json:"description" bson:"description" required:"true"`
@@ -73,5 +70,32 @@ func NewProject(name string, description string, members ...Member) *Project {
 		Members:     members,
 	}
 	project.ID = primitive.NewObjectID()
+	project.CreatedAt = time.Now()
+	project.repo = repoimpl.GetProjectRepo()
 	return project
+}
+
+// Create verifies and inserts the project into database
+func (prj *Project) Create() error {
+	if prj.repo == nil {
+		return fmt.Errorf("Project does not initialized")
+	}
+	validator := validatorimpl.NewDefaultValidator()
+	errs := validator.Verify(prj)
+	if len(errs) != 0 {
+		return fmt.Errorf("Save the account failed due to: %v", errs)
+	}
+	ctxFind, cancelFind := utils.GetDefaultCtx()
+	defer cancelFind()
+	rst := prj.repo.FindOne(ctxFind, bson.M{"name": prj.Name})
+	foundProject := &Project{}
+	err2 := rst.Decode(foundProject)
+	print(err2)
+	if !foundProject.ID.IsZero() {
+		return AlreadyExistError{}
+	}
+	ctxInsert, cancelInsert := utils.GetDefaultCtx()
+	defer cancelInsert()
+	_, err := prj.repo.InsertOne(ctxInsert, prj)
+	return err
 }

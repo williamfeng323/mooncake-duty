@@ -2,6 +2,7 @@ package repoimpl
 
 import (
 	"context"
+	"sync"
 	"williamfeng323/mooncake-duty/src/infrastructure/db"
 
 	"go.mongodb.org/mongo-driver/mongo"
@@ -56,4 +57,19 @@ func (pr *ProjectRepo) UpdateOne(ctx context.Context, filter interface{}, update
 func (pr *ProjectRepo) DeleteOne(ctx context.Context, filter interface{},
 	opts ...*options.DeleteOptions) (*mongo.DeleteResult, error) {
 	return pr.collection.DeleteOne(ctx, filter, opts...)
+}
+
+var projectRepo *ProjectRepo
+var projectLock sync.RWMutex
+
+// GetProjectRepo get the account repository instance,
+// Create if not exist.
+func GetProjectRepo() *ProjectRepo {
+	projectLock.Lock()
+	defer projectLock.Unlock()
+	if projectRepo == nil {
+		projectRepo = &ProjectRepo{}
+		projectRepo.SetCollection(db.GetConnection().GetCollection("Project"))
+	}
+	return projectRepo
 }

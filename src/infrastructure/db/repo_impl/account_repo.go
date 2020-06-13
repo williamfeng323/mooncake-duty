@@ -2,10 +2,12 @@ package repoimpl
 
 import (
 	"context"
+	"strings"
 	"sync"
 
 	"williamfeng323/mooncake-duty/src/infrastructure/db"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -45,6 +47,11 @@ func (pr *AccountRepo) Find(ctx context.Context, filter interface{},
 func (pr *AccountRepo) FindOne(ctx context.Context, filter interface{},
 	opts ...*options.FindOneOptions) *mongo.SingleResult {
 	return pr.collection.FindOne(ctx, filter, opts...)
+}
+
+// EmailFilter returns the filter for selecting data by email
+func (pr *AccountRepo) EmailFilter(email string) bson.M {
+	return bson.M{"$or": bson.A{bson.M{"email": strings.ToUpper(email)}, bson.M{"email": strings.ToLower(email)}, bson.M{"email": email}}}
 }
 
 // UpdateOne update the document according to the filter.

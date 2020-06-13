@@ -24,7 +24,7 @@ func (as *Service) SetRepo(repo *repoimpl.AccountRepo) {
 func (as *Service) SignIn(email string, password string) (string, error) {
 	ctx, cancel := utils.GetDefaultCtx()
 	defer cancel()
-	result := as.repo.FindOne(ctx, bson.M{"email": email})
+	result := as.repo.FindOne(ctx, as.repo.EmailFilter(email))
 	acct := &Account{}
 	result.Decode(acct)
 	if acct.ID.IsZero() {
@@ -122,7 +122,7 @@ func (as *Service) DeactivateAccount(email string) error {
 func (as *Service) GetAccount(email string) (*Account, error) {
 	ctx, cancel := utils.GetDefaultCtx()
 	defer cancel()
-	rst := as.repo.FindOne(ctx, bson.M{"email": email})
+	rst := as.repo.FindOne(ctx, as.repo.EmailFilter(email))
 	account := &Account{}
 	rst.Decode(account)
 	if account.ID.IsZero() {
