@@ -3,6 +3,7 @@ package account
 import (
 	"fmt"
 	"reflect"
+	"time"
 
 	repoimpl "williamfeng323/mooncake-duty/src/infrastructure/db/repo_impl"
 	"williamfeng323/mooncake-duty/src/utils"
@@ -84,6 +85,7 @@ func (as *Service) UpdateContactMethods(originEmail string, cm ContactMethods, e
 		updatedCm, _ := bson.Marshal(cm)
 		bson.Unmarshal(updatedCm, &cmMap)
 		valueSet["contactMethods"] = cmMap
+		valueSet["updatedAt"] = time.Now().UTC()
 	}
 	if len(valueSet) == 0 {
 		return fmt.Errorf("Nothing needs to be updated")
@@ -102,7 +104,7 @@ func (as *Service) GrantSystemAdmin(email string) error {
 	}
 	ctx, cancel := utils.GetDefaultCtx()
 	defer cancel()
-	_, err = as.repo.UpdateOne(ctx, bson.M{"_id": account.ID}, bson.M{"$set": bson.M{"isAdmin": true}})
+	_, err = as.repo.UpdateOne(ctx, bson.M{"_id": account.ID}, bson.M{"$set": bson.M{"isAdmin": true, "updatedAt": time.Now().UTC()}})
 	return err
 }
 
@@ -114,7 +116,7 @@ func (as *Service) DeactivateAccount(email string) error {
 	}
 	ctx, cancel := utils.GetDefaultCtx()
 	defer cancel()
-	_, err = as.repo.UpdateOne(ctx, bson.M{"_id": account.ID}, bson.M{"$set": bson.M{"deleted": true}})
+	_, err = as.repo.UpdateOne(ctx, bson.M{"_id": account.ID}, bson.M{"$set": bson.M{"deleted": true, "updatedAt": time.Now().UTC()}})
 	return err
 }
 

@@ -1,6 +1,7 @@
 package project
 
 import (
+	"time"
 	"williamfeng323/mooncake-duty/src/domains/account"
 	repoimpl "williamfeng323/mooncake-duty/src/infrastructure/db/repo_impl"
 	"williamfeng323/mooncake-duty/src/utils"
@@ -35,10 +36,8 @@ func (ps *Service) SetMembers(projectName string, members ...Member) ([]Member, 
 	for k, v := range members {
 		findAcctCtx, findAcctCtxCancel := utils.GetDefaultCtx()
 		defer findAcctCtxCancel()
-		tempAcct := account.Account{}
 		rst := acctRepo.FindOne(findAcctCtx, bson.M{"_id": v.MemberID})
-		err := rst.Decode(&tempAcct)
-		if err == nil {
+		if rst.Err() == nil {
 			existingMembers.Members = append(existingMembers.Members, members[k])
 		} else {
 			failedMembers = append(failedMembers, members[k])
@@ -55,7 +54,8 @@ func (ps *Service) SetMembers(projectName string, members ...Member) ([]Member, 
 	bson.Unmarshal(encMembers, bsonMembers)
 	psUpdateCtx, psUpdateCancel := utils.GetDefaultCtx()
 	defer psUpdateCancel()
-	_, err = ps.repo.UpdateOne(psUpdateCtx, bson.M{"name": projectName}, bson.M{"$set": bson.M{"members": bsonMembers["members"]}})
+	_, err = ps.repo.UpdateOne(psUpdateCtx,
+		bson.M{"name": projectName}, bson.M{"$set": bson.M{"members": bsonMembers["members"], "updatedAt": time.Now().UTC()}})
 	if err != nil {
 		return nil, members, err
 	}
