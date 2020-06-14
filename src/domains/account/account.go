@@ -30,7 +30,7 @@ type ContactMethods struct {
 type Account struct {
 	repo           *repoimpl.AccountRepo
 	db.BaseModel   `json:",inline" bson:",inline"`
-	Email          string               `json:"email" bson:"email" required:"true"`
+	Email          string               `json:"email" bson:"email" required:"true"` // account email is unique to-do add the unique index
 	Password       string               `json:"password" bson:"password" required:"true"`
 	Mobile         string               `json:"mobile,omitempty" bson:"mobile,omitempty"`
 	IsAdmin        bool                 `json:"isAdmin" bson:"isAdmin"`

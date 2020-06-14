@@ -41,7 +41,7 @@ const (
 // Alarm defines the struct of an alarm
 type Alarm struct {
 	ID          primitive.ObjectID `json:"id" bson:"id"`
-	Name        string             `json:"name" bson:"name"`
+	Name        string             `json:"name" bson:"name"` // The name of the alarm must be unique
 	Description string             `json:"description" bson:"description"`
 	Severity    `json:"severity" bson:"severity"`
 }
@@ -56,7 +56,7 @@ type Member struct {
 type Project struct {
 	repo         *repoimpl.ProjectRepo
 	db.BaseModel `json:",inline" bson:",inline"`
-	Name         string   `json:"name" bson:"name" required:"true"`
+	Name         string   `json:"name" bson:"name" required:"true"` // The name of the project is unique
 	Description  string   `json:"description" bson:"description" required:"true"`
 	Members      []Member `json:"members" bson:"members"`
 	Alarms       []Alarm  `json:"alarms" bson:"alarms"` // AlarmLog would be needed
