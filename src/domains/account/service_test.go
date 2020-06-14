@@ -1,145 +1,109 @@
 package account
 
-// import (
-// 	"testing"
-// 	dao "williamfeng323/mooncake-duty/src/infrastructure/db"
+import (
+	"context"
+	"testing"
+	repoimpl "williamfeng323/mooncake-duty/src/infrastructure/db/repo_impl"
 
-// 	"go.mongodb.org/mongo-driver/bson/primitive"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+	"go.mongodb.org/mongo-driver/bson"
+)
 
-// 	. "github.com/smartystreets/goconvey/convey"
-// )
+func TestAccountService(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "Account Service Suite")
+}
 
-// func TestCreateAccount(t *testing.T) {
-// 	SkipConvey("Giving a db connection", t, func() {
-// 		acct := &Account{}
-// 		conn := dao.GetConnection()
-
-// 		Convey("Should panic while no register Account", func() {
-// 			So(func() { createAccount("", "", true) }, ShouldPanic)
-// 		})
-// 		Convey("Should return error When email or password does not provided", func() {
-// 			conn.Register(acct)
-// 			rst, err := createAccount("", "", true)
-// 			So(rst, ShouldBeNil)
-// 			So(err, ShouldBeError)
-// 		})
-// 		Convey("Should return inserted account objectId when email/password valid", func() {
-// 			rst, err := createAccount("test123", "rstAbc.", true)
-// 			So(rst, ShouldNotBeNil)
-// 			So(err, ShouldBeNil)
-// 			stt := rst.InsertedID.(primitive.ObjectID).Hex()
-// 			id, err := primitive.ObjectIDFromHex(stt)
-// 			conn.CollectionRegistry["Account"].New(acct)
-// 			acct.DeleteByID(id)
-// 		})
-// 		Convey("Should return error When email duplicate with existing account", func() {
-// 			initAcct, err := createAccount("test123", "rstAbcd", true)
-// 			stt := initAcct.InsertedID.(primitive.ObjectID).Hex()
-// 			id, err := primitive.ObjectIDFromHex(stt)
-// 			rst, err := createAccount("test123", "rstAbcd", true)
-// 			So(rst, ShouldBeNil)
-// 			So(err, ShouldBeError)
-// 			conn.CollectionRegistry["Account"].New(acct)
-// 			acct.DeleteByID(id)
-// 		})
-// 	})
-// }
-
-// func TestFindByID(t *testing.T) {
-// 	SkipConvey("Giving a db connection and init user", t, func() {
-// 		acct := &Account{}
-// 		conn := dao.GetConnection()
-// 		conn.Register(acct)
-// 		conn.CollectionRegistry["Account"].New(acct)
-// 		acct.Email = "test@test.com"
-// 		acct.Password = "password"
-// 		rst, _ := acct.InsertAccount()
-// 		id := rst.InsertedID.(primitive.ObjectID).Hex()
-// 		Convey("should return the account document when find a valid id", func() {
-// 			acct2, err := getAccountByID(id)
-// 			So(acct2, ShouldNotBeZeroValue)
-// 			So(err, ShouldBeNil)
-// 		})
-// 		Convey("should return nil account document when cannot find related id", func() {
-// 			fakeID := primitive.NewObjectID()
-// 			acct2, err := getAccountByID(fakeID.Hex())
-// 			So(acct2, ShouldBeZeroValue)
-// 			So(err, ShouldNotBeNil)
-// 		})
-// 		acct.DeleteByID(acct.ID)
-// 	})
-// }
-
-// func TestUpdateAccount(t *testing.T) {
-// 	SkipConvey("Giving a db connection an init user", t, func() {
-// 		acct := &Account{}
-// 		conn := dao.GetConnection()
-// 		conn.Register(acct)
-// 		conn.CollectionRegistry["Account"].New(acct)
-// 		acct.Email = "test@test.com"
-// 		acct.Password = "password"
-// 		acct.InsertAccount()
-// 		Convey("Should updated document correctly", func() {
-// 			rst, err := updateAccount(acct.ID, "https://avatar/test/1234567", "1234567")
-// 			So(rst, ShouldNotBeNil)
-// 			So(err, ShouldBeNil)
-// 			So(rst.ModifiedCount, ShouldEqual, 1)
-// 			act, _ := getAccountByID(acct.ID.Hex())
-// 			So(act.Mobile, ShouldEqual, "1234567")
-// 			So(act.Avatar, ShouldEqual, "https://avatar/test/1234567")
-// 		})
-// 		acct.DeleteByID(acct.ID)
-// 	})
-// }
-
-// func TestSignIn(t *testing.T) {
-// 	SkipConvey("Giving a db connection and init user", t, func() {
-// 		acct := &Account{}
-// 		conn := dao.GetConnection()
-// 		conn.Register(acct)
-// 		conn.CollectionRegistry["Account"].New(acct)
-// 		acct.Email = "test@test.com"
-// 		acct.Password = "password"
-// 		acct.InsertAccount()
-// 		Convey("Should return error when user not found", func() {
-// 			act, err := signIn("sss@ss.com", "abc")
-// 			So(act, ShouldBeEmpty)
-// 			So(err, ShouldNotBeNil)
-// 		})
-// 		Convey("Should return error when user/password does valid", func() {
-// 			act, err := signIn("test@test.com", "abc")
-// 			So(act, ShouldBeEmpty)
-// 			So(err, ShouldNotBeNil)
-// 		})
-// 		FocusConvey("Should return jwt token when user/password valid", func() {
-// 			act, err := signIn("test@test.com", "password")
-// 			So(act, ShouldNotBeEmpty)
-// 			So(err, ShouldBeNil)
-// 		})
-// 		acct.DeleteByID(acct.ID)
-// 	})
-// }
-
-// func TestRefresh(t *testing.T) {
-// 	SkipConvey("Giving a db connection and init user", t, func() {
-// 		acct := &Account{}
-// 		conn := dao.GetConnection()
-// 		conn.Register(acct)
-// 		conn.CollectionRegistry["Account"].New(acct)
-// 		acct.Email = "test@test.com"
-// 		acct.Password = "password"
-// 		acct.InsertAccount()
-// 		Convey("Should return refreshed token when called with valid token", func() {
-// 			tokenString, _ := signIn("test@test.com", "password")
-// 			refreshedToken, err := refresh(tokenString)
-// 			So(refreshedToken, ShouldNotBeEmpty)
-// 			So(err, ShouldBeEmpty)
-// 		})
-// 		Convey("Should return error when token invalid(any reason even timeout)", func() {
-// 			refreshedToken, err := refresh("whateverTokenString")
-// 			So(refreshedToken, ShouldBeEmpty)
-// 			So(err, ShouldBeError)
-// 		})
-// 		acct.DeleteByID(acct.ID)
-// 	})
-// }
+var _ = Describe("AccountService", func() {
+	repo := repoimpl.GetAccountRepo()
+	acctSrv := &Service{}
+	acctSrv.SetRepo(repoimpl.GetAccountRepo())
+	BeforeEach(func() {
+		acct2, _ := NewAccount("test@test.com", "12345test")
+		acct2.IsAdmin = true
+		acct2.Save(true)
+	})
+	AfterEach(func() {
+		repo.DeleteOne(context.Background(), bson.M{"email": "test@test.com"})
+	})
+	Describe("#SignIn", func() {
+		Context("call with incorrect email/password", func() {
+			It("should return error", func() {
+				rst, err := acctSrv.SignIn("test@test.com", "12345")
+				Expect(rst).To(Equal(""))
+				Expect(err).ToNot(BeNil())
+			})
+		})
+		Context("call with correct email/password", func() {
+			It("should jwt token", func() {
+				rst, err := acctSrv.SignIn("test@test.com", "12345test")
+				Expect(rst).ToNot(BeNil())
+				Expect(err).To(BeNil())
+			})
+		})
+		Context("call with non-exist email", func() {
+			It("should return error", func() {
+				rst, err := acctSrv.SignIn("test1@test.com", "12345test")
+				Expect(rst).To(Equal(""))
+				Expect(err.Error()).To(Equal("Account Not Found"))
+			})
+		})
+	})
+	Describe("#Register", func() {
+		Context("call with exist email", func() {
+			It("should return error", func() {
+				rst, err := acctSrv.Register("test@test.com", "12345test", true)
+				Expect(rst).To(Equal(""))
+				Expect(err.Error()).To(Equal("Account already exist"))
+			})
+		})
+		Context("call with non-exist email", func() {
+			It("should return jwt token", func() {
+				rst, err := acctSrv.Register("test1@test.com", "12345test", true)
+				Expect(rst).ToNot(BeNil())
+				Expect(err).To(BeNil())
+				repo.DeleteOne(context.Background(), bson.M{"email": "test1@test.com"})
+			})
+		})
+	})
+	Describe("#UpdateContactMethods", func() {
+		Context("call with exist account", func() {
+			Context("update partial ContactMethods", func() {
+				It("should throw error if enable sendSMS when no mobile set", func() {
+					cm := ContactMethods{SentSMS: true}
+					err := acctSrv.UpdateContactMethods("test@test.com", cm, "", "")
+					Expect(err.Error()).To(Equal("Mobile must be set before you active send email notification"))
+				})
+				It("should update the contactMethods", func() {
+					cm := ContactMethods{SentSMS: true}
+					cm.SentHook = SentHook{
+						URL: "http://fake.com/sofake",
+					}
+					err := acctSrv.UpdateContactMethods("test@test.com", cm, "", "12345678910")
+					Expect(err).To(BeNil())
+				})
+			})
+			Context("when existing account has contactMethods", func() {
+				It("Should update the account without error", func() {
+					acct, _ := NewAccount("test@test.com", "12345test")
+					acct.ContactMethods.SentEmail = true
+					acct.Mobile = "12345678910"
+					acct.Save(true)
+					cm := ContactMethods{SentSMS: true, SentEmail: false}
+					cm.SentHook = SentHook{
+						URL: "http://fake.com/sofake",
+					}
+					err := acctSrv.UpdateContactMethods("test@test.com", cm, "", "")
+					Expect(err).To(BeNil())
+				})
+			})
+		})
+		Context("call with non-exist account", func() {
+			It("should return error", func() {
+				err := acctSrv.UpdateContactMethods("test2@test.com", ContactMethods{}, "", "")
+				Expect(err).ToNot(BeNil())
+			})
+		})
+	})
+})

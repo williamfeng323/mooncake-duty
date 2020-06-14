@@ -1,9 +1,11 @@
 package utils
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/spf13/viper"
 )
@@ -16,12 +18,14 @@ type MongoConfig struct {
 	Password          string `mapstructure:"password"`
 	Database          string `mapstructure:"database"`
 	ConnectionOptions string `mapstructure:"connectOptions"`
+	DefaultTimeout    int    `mapstructure:"defaultTimeout"`
 }
 
 // Config the configuration of the app.
 type Config struct {
-	Mongo  MongoConfig `mapstructure:"mongoConfig" yaml:"mongoConfig"`
-	JWTKey string      `yaml:"jwtKey"`
+	Mongo      MongoConfig `mapstructure:"mongoConfig" yaml:"mongoConfig"`
+	JWTKey     string      `yaml:"jwtKey"`
+	EncryptKey string      `yaml:"encryptKey"`
 }
 
 var config Config
@@ -45,4 +49,11 @@ func GetConf() *Config {
 		panic(fmt.Errorf("Fatal error config file: %s", err))
 	}
 	return &config
+}
+
+// GetDefaultCtx Create a context with default timeout
+func GetDefaultCtx() (context.Context, context.CancelFunc) {
+	timeout, _ := time.ParseDuration(fmt.Sprintf("%ds", GetConf().Mongo.DefaultTimeout))
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	return ctx, cancel
 }

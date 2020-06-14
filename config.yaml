@@ -5,4 +5,6 @@ mongoConfig:
   password: example
   database: mooncake 
   connectOptions: authSource=admin
+  defaultTimeout: 100
 jwtKey: superS3cr#t
+encryptKey: littleR@bbitL0veCarrotAndCabbage
