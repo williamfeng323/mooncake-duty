@@ -67,7 +67,6 @@ func (acct *Account) Save(allowReplace bool) (int, error) {
 
 	if tempAcct.ID.IsZero() {
 		rst, err := acct.repo.InsertOne(ctx, acct)
-		print(rst)
 		if err != nil {
 			return 0, err
 		}
@@ -78,7 +77,6 @@ func (acct *Account) Save(allowReplace bool) (int, error) {
 		bson.Unmarshal(inrec, &inInterface)
 		delete(inInterface, "_id")
 		rst, err := acct.repo.UpdateOne(ctx, acct.repo.EmailFilter(acct.Email), bson.M{"$set": inInterface})
-		print(rst.MatchedCount)
 		if err != nil {
 			return 0, err
 		}
