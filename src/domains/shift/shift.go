@@ -103,25 +103,26 @@ func (sh *Shift) DefaultShifts(startDate time.Time, endDate time.Time) ([]*TempS
 	tempShifts := []*TempShift{}
 	var periodDuration float64
 	var sinceShiftStarted float64
-	var recurrenceMultiplier int
+	var recurrenceMultiplier float64
 	switch sh.ShiftRecurrence {
 	case Daily:
-		d := endDate.Sub(startDate)
-		periodDuration = math.Ceil(d.Hours() / 24)
-		sinceShiftStarted = math.Ceil(startDate.Sub(sh.ShiftFirstDate).Hours() / 24)
 		recurrenceMultiplier = 1
 	case Weekly:
-		startDate = utils.FirstDateOfWeek(startDate, time.Weekday(sh.WeekStart))
-		periodDuration = math.Ceil(utils.ToDateEnded(endDate).Sub(startDate).Hours() / (24 * 7))
-		sinceShiftStarted = math.Ceil(startDate.Sub(sh.ShiftFirstDate).Hours() / (24 * 7))
 		recurrenceMultiplier = 7
+		startDate = utils.FirstDateOfWeek(startDate, time.Weekday(sh.WeekStart))
 	case BiWeekly:
+		recurrenceMultiplier = 14
+		startDate = utils.FirstDateOfWeek(startDate, time.Weekday(sh.WeekStart))
 	case Monthly:
+		fallthrough
 	default:
 		return nil, nil
 	}
+
+	periodDuration = math.Ceil(utils.ToDateStarted(endDate).Sub(utils.ToDateStarted(startDate)).Hours() / (24 * recurrenceMultiplier))
+	sinceShiftStarted = math.Ceil(utils.ToDateStarted(startDate).Sub(sh.ShiftFirstDate).Hours() / (24 * recurrenceMultiplier))
 	for i := int(sinceShiftStarted); i < int(sinceShiftStarted+periodDuration); i++ {
-		periodStartDate := utils.ToDateStarted(sh.ShiftFirstDate.AddDate(0, 0, i*recurrenceMultiplier))
+		periodStartDate := utils.ToDateStarted(sh.ShiftFirstDate.AddDate(0, 0, i*int(recurrenceMultiplier)))
 		ts := NewTempShift(periodStartDate, sh.ShiftRecurrence)
 
 		ts.T1Member = getMember(sh.T1Members, i)

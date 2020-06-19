@@ -89,7 +89,7 @@ func (prj *Project) Create() error {
 	defer cancelFind()
 	rst := prj.repo.FindOne(ctxFind, bson.M{"name": prj.Name})
 	foundProject := &Project{}
-	err2 := rst.Decode(foundProject)
+	rst.Decode(foundProject)
 	if !foundProject.ID.IsZero() {
 		return AlreadyExistError{}
 	}

@@ -66,7 +66,7 @@ func (acct *Account) Save(allowReplace bool) (int, error) {
 	rst.Decode(tempAcct)
 
 	if tempAcct.ID.IsZero() {
-		rst, err := acct.repo.InsertOne(ctx, acct)
+		_, err := acct.repo.InsertOne(ctx, acct)
 		if err != nil {
 			return 0, err
 		}
@@ -76,7 +76,7 @@ func (acct *Account) Save(allowReplace bool) (int, error) {
 		inrec, _ := bson.Marshal(acct)
 		bson.Unmarshal(inrec, &inInterface)
 		delete(inInterface, "_id")
-		rst, err := acct.repo.UpdateOne(ctx, acct.repo.EmailFilter(acct.Email), bson.M{"$set": inInterface})
+		_, err := acct.repo.UpdateOne(ctx, acct.repo.EmailFilter(acct.Email), bson.M{"$set": inInterface})
 		if err != nil {
 			return 0, err
 		}

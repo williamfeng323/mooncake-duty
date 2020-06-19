@@ -20,19 +20,15 @@ func TestProjectService(t *testing.T) {
 
 var _ = Describe("project.Service", func() {
 	Describe("#SetMembers", func() {
-		prj := project.NewProject("Test", "This is a test project", project.Member{MemberID: primitive.NewObjectID(), IsAdmin: true})
-		prj.Create()
+		prj := project.NewProject("ProjectTestService", "This is a test project", project.Member{MemberID: primitive.NewObjectID(), IsAdmin: true})
 
 		prjService := &project.Service{}
 		prjService.SetRepo(repoimpl.GetProjectRepo())
-		AfterSuite(func() {
-			repo := repoimpl.GetProjectRepo()
-			repo.DeleteOne(context.Background(), bson.M{"name": prj.Name})
-		})
 
 		acct1, _ := account.NewAccount("Test1@test.com", "Testaccount1")
 		acct2, _ := account.NewAccount("Test2@test.com", "Testaccount1")
 		BeforeEach(func() {
+			prj.Create()
 			acct1.Save(false)
 			acct2.Save(false)
 		})
@@ -40,6 +36,8 @@ var _ = Describe("project.Service", func() {
 			acctRepo := repoimpl.GetAccountRepo()
 			acctRepo.DeleteOne(context.Background(), bson.M{"_id": acct1.ID})
 			acctRepo.DeleteOne(context.Background(), bson.M{"_id": acct2.ID})
+			repo := repoimpl.GetProjectRepo()
+			repo.DeleteOne(context.Background(), bson.M{"name": prj.Name})
 		})
 
 		Context("Provides a valid project name", func() {
@@ -60,16 +58,16 @@ var _ = Describe("project.Service", func() {
 			Context("Provides valid member id", func() {
 				It("should return the succeeded member id and nil error if only provides 1 member id", func() {
 					succeededIDs, failedIDs, err := prjService.SetMembers(prj.Name, project.Member{MemberID: acct1.ID, IsAdmin: true})
+					Expect(err).To(BeNil())
 					Expect(succeededIDs[0].MemberID).To(Equal(acct1.ID))
 					Expect(failedIDs).To(Equal([]project.Member{}))
-					Expect(err).To(BeNil())
 				})
 				It("should be able to return succeeded member ids and nil error if provides multiple member id ", func() {
 					succeededIDs, failedIDs, err := prjService.SetMembers(prj.Name, project.Member{MemberID: acct2.ID, IsAdmin: false}, project.Member{MemberID: acct1.ID, IsAdmin: true})
+					Expect(err).To(BeNil())
 					Expect(succeededIDs[0].MemberID).To(Equal(acct2.ID))
 					Expect(succeededIDs[1].MemberID).To(Equal(acct1.ID))
 					Expect(failedIDs).To(Equal([]project.Member{}))
-					Expect(err).To(BeNil())
 				})
 			})
 		})
@@ -78,7 +76,7 @@ var _ = Describe("project.Service", func() {
 				succeededIDs, failedIDs, err := prjService.SetMembers("FakeProject", project.Member{MemberID: acct1.ID, IsAdmin: true})
 				Expect(succeededIDs).To(BeNil())
 				Expect(failedIDs).ToNot(Equal([]project.Member{}))
-				Expect(err).ToNot(BeNil())
+				Expect(err).To(MatchError(project.NotFoundError{}))
 			})
 		})
 	})

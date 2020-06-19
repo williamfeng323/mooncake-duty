@@ -30,7 +30,7 @@ func (ps *Service) SetMembers(projectName string, members ...Member) ([]Member, 
 	defer findProjectCancel()
 	prj := ps.repo.FindOne(findProjectCtx, bson.M{"name": projectName})
 	if prj.Err() != nil {
-		return nil, members, prj.Err()
+		return nil, members, NotFoundError{}
 	}
 	acctRepo := repoimpl.GetAccountRepo()
 	for k, v := range members {

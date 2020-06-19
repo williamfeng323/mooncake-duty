@@ -2,6 +2,7 @@ package shift_test
 
 import (
 	"context"
+	"math"
 	"testing"
 	"time"
 	"williamfeng323/mooncake-duty/src/domains/account"
@@ -174,6 +175,7 @@ var _ = Describe("Shift", func() {
 						for _, v := range tempShifts {
 							Expect(v.StartDate.Weekday()).To(Equal(time.Sunday))
 							Expect(v.EndDate.Weekday()).To(Equal(time.Saturday))
+							Expect(math.Ceil(v.EndDate.Sub(v.StartDate).Hours() / 24)).To(Equal(float64(7)))
 						}
 					})
 				})
@@ -194,7 +196,6 @@ var _ = Describe("Shift", func() {
 						Expect(tempShifts[2].T2Member.String()).To(Equal(acct4.ID.String()))
 						Expect(tempShifts[2].T3Member.String()).To(Equal(acct7.ID.String()))
 					})
-					XIt("every shifts should last for 1 week", func() {})
 				})
 			})
 		})
