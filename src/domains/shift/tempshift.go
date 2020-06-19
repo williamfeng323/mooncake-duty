@@ -28,8 +28,6 @@ func NewTempShift(startDate time.Time, recurrence shiftRecurrence) *TempShift {
 		endDate = utils.ToDateEnded(startDate.AddDate(0, 0, 6))
 	case BiWeekly:
 		endDate = utils.ToDateEnded(startDate.AddDate(0, 0, 13))
-	case Monthly:
-		endDate = time.Date(startDate.Year(), startDate.Month(), 1, 0, 0, 0, 0, startDate.Location()).AddDate(0, 1, 0).Add(-time.Nanosecond)
 	}
 	return &TempShift{
 		StartDate: startDate,

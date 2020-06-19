@@ -40,14 +40,12 @@ const (
 	Weekly
 	// BiWeekly means the shift rotates bi-weekly
 	BiWeekly
-	// Monthly means the shift rotates monthly
-	Monthly
 )
 
 // String returns the English name of the shift recurrence ("Daily", "Weekly", ...).
 func (w shiftRecurrence) String() string {
-	days := []string{"Daily", "Weekly", "BiWeekly", "Monthly"}
-	if Daily <= w && w <= Monthly {
+	days := []string{"Daily", "Weekly", "BiWeekly"}
+	if Daily <= w && w <= BiWeekly {
 		return days[w]
 	}
 	return ""
@@ -84,8 +82,6 @@ func NewShift(projectID primitive.ObjectID, weekStart WeekStart, shiftFirstDate 
 		fallthrough
 	case BiWeekly:
 		shift.ShiftFirstDate = utils.FirstDateOfWeek(shiftFirstDate, time.Weekday(weekStart))
-	case Monthly:
-		shift.ShiftFirstDate = utils.ToMonthStarted(shiftFirstDate)
 	}
 	return shift, nil
 }
@@ -113,14 +109,12 @@ func (sh *Shift) DefaultShifts(startDate time.Time, endDate time.Time) ([]*TempS
 	case BiWeekly:
 		recurrenceMultiplier = 14
 		startDate = utils.FirstDateOfWeek(startDate, time.Weekday(sh.WeekStart))
-	case Monthly:
-		fallthrough
 	default:
 		return nil, nil
 	}
 
 	periodDuration = math.Ceil(utils.ToDateStarted(endDate).Sub(utils.ToDateStarted(startDate)).Hours() / (24 * recurrenceMultiplier))
-	sinceShiftStarted = math.Ceil(utils.ToDateStarted(startDate).Sub(sh.ShiftFirstDate).Hours() / (24 * recurrenceMultiplier))
+	sinceShiftStarted = math.Floor(utils.ToDateStarted(startDate).Sub(sh.ShiftFirstDate).Hours() / (24 * recurrenceMultiplier))
 	for i := int(sinceShiftStarted); i < int(sinceShiftStarted+periodDuration); i++ {
 		periodStartDate := utils.ToDateStarted(sh.ShiftFirstDate.AddDate(0, 0, i*int(recurrenceMultiplier)))
 		ts := NewTempShift(periodStartDate, sh.ShiftRecurrence)
