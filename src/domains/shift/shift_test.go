@@ -246,4 +246,32 @@ var _ = Describe("Shift", func() {
 			})
 		})
 	})
+	Describe("Create", func() {
+		It("Should return error when it is empty", func() {
+			shf := &shift.Shift{}
+			err := shf.Create()
+			Expect(err).ToNot(BeNil())
+		})
+		Context("Call by valid domain instance", func() {
+			It("should return duplicate shift error if project already associate with other shift", func() {
+				shf, _ := shift.NewShift(prj.ID, shift.Mon, time.Date(2020, 6, 16, 0, 0, 0, 0, time.Now().Location()), shift.Weekly)
+				err := shf.Create()
+				Expect(err).To(BeNil())
+				shf2, _ := shift.NewShift(prj.ID, shift.Mon, time.Date(2020, 6, 16, 0, 0, 0, 0, time.Now().Location()), shift.Weekly)
+				err2 := shf2.Create()
+				Expect(err2).To(MatchError(shift.DuplicateShiftError{}))
+				shiftRepo := repoimpl.GetShiftRepo()
+				shiftRepo.DeleteOne(context.Background(), bson.M{"_id": shf.ID})
+				shiftRepo.DeleteOne(context.Background(), bson.M{"_id": shf2.ID})
+			})
+			It("should persist the shift to database if the project does not associate with other shift", func() {
+				shf, err := shift.NewShift(prj.ID, shift.Mon, time.Date(2020, 6, 16, 0, 0, 0, 0, time.Now().Location()), shift.Weekly)
+				Expect(err).To(BeNil())
+				err2 := shf.Create()
+				Expect(err2).To(BeNil())
+				shiftRepo := repoimpl.GetShiftRepo()
+				shiftRepo.DeleteOne(context.Background(), bson.M{"_id": shf.ID})
+			})
+		})
+	})
 })

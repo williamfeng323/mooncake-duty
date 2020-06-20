@@ -1,15 +1,18 @@
 package shift
 
 import (
+	"fmt"
 	"math"
 	"time"
-	"williamfeng323/mooncake-duty/src/domains/project"
-	"williamfeng323/mooncake-duty/src/infrastructure/db"
-	repoimpl "williamfeng323/mooncake-duty/src/infrastructure/db/repo_impl"
-	"williamfeng323/mooncake-duty/src/utils"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"gopkg.in/mgo.v2/bson"
+
+	"williamfeng323/mooncake-duty/src/domains/project"
+	"williamfeng323/mooncake-duty/src/infrastructure/db"
+	repoimpl "williamfeng323/mooncake-duty/src/infrastructure/db/repo_impl"
+	validatorimpl "williamfeng323/mooncake-duty/src/infrastructure/db/validator_impl"
+	"williamfeng323/mooncake-duty/src/utils"
 )
 
 // WeekStart defines when the week start. Sun/Mon
@@ -54,10 +57,10 @@ func (w shiftRecurrence) String() string {
 // Shift describes the on call shift
 type Shift struct {
 	db.BaseModel    `json:",inline" bson:",inline"`
-	ProjectID       primitive.ObjectID   `json:"projectId" bson:"projectId"`
-	WeekStart       WeekStart            `json:"weekStart" bson:"weekStart"`
-	ShiftFirstDate  time.Time            `json:"shiftFirstDate" bson:"shiftFirstDate"`
-	ShiftRecurrence shiftRecurrence      `json:"shiftRecurrence" bson:"shiftRecurrence"`
+	ProjectID       primitive.ObjectID   `json:"projectId" bson:"projectId" required:"true"`
+	WeekStart       WeekStart            `json:"weekStart" bson:"weekStart" required:"true"`
+	ShiftFirstDate  time.Time            `json:"shiftFirstDate" bson:"shiftFirstDate" required:"true"`
+	ShiftRecurrence shiftRecurrence      `json:"shiftRecurrence" bson:"shiftRecurrence" required:"true"`
 	T1Members       []primitive.ObjectID `json:"t1Members" bson:"t1Members"`
 	T2Members       []primitive.ObjectID `json:"t2Members" bson:"t2Members"`
 	T3Members       []primitive.ObjectID `json:"t3Members" bson:"t3Members"`
@@ -84,6 +87,26 @@ func NewShift(projectID primitive.ObjectID, weekStart WeekStart, shiftFirstDate 
 		shift.ShiftFirstDate = utils.FirstDateOfWeek(shiftFirstDate, time.Weekday(weekStart))
 	}
 	return shift, nil
+}
+
+// Create validates the value in shift domain and inserts into database
+func (sh *Shift) Create() error {
+	validator := validatorimpl.NewDefaultValidator()
+	errs := validator.Verify(sh)
+	if len(errs) != 0 {
+		return fmt.Errorf("Save the shift failed due to content errors: %v", errs)
+	}
+	shiftRepo := repoimpl.GetShiftRepo()
+	findCtx, findCancel := utils.GetDefaultCtx()
+	defer findCancel()
+	rst := shiftRepo.FindOne(findCtx, bson.M{"projectId": sh.ProjectID})
+	if rst.Err() == nil {
+		return DuplicateShiftError{}
+	}
+	ctxInsert, cancelInsert := utils.GetDefaultCtx()
+	defer cancelInsert()
+	_, err := shiftRepo.InsertOne(ctxInsert, sh)
+	return err
 }
 
 // DefaultShifts returns the default shifts in this period according to its info

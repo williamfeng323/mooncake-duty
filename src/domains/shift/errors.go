@@ -13,3 +13,10 @@ type OutOfScopeError struct{}
 func (o OutOfScopeError) Error() string {
 	return "Selected period out of the shift scope"
 }
+
+// DuplicateShiftError represents shift can only associate with project that have no shift configured
+type DuplicateShiftError struct{}
+
+func (d DuplicateShiftError) Error() string {
+	return "Shift can only associate with project that have no shift configured"
+}
