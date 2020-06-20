@@ -50,9 +50,9 @@ var _ = Describe("Project", func() {
 			Context("Existing project name in the database", func() {
 				It("Should return error to state cannot override existing project", func() {
 					prj.Create()
-					prj2 := project.NewProject("Test", "This is the 2nd test project")
+					prj2 := project.NewProject("TestProjectDomain", "This is the 2nd test project")
 					err := prj2.Create()
-					Expect(err.Error()).To(Equal("Project already exist"))
+					Expect(err).To(MatchError(project.AlreadyExistError{}))
 				})
 			})
 		})

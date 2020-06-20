@@ -3,26 +3,18 @@ package db_test
 import (
 	"testing"
 
+	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
 	"williamfeng323/mooncake-duty/src/infrastructure/db"
-	repoimpl "williamfeng323/mooncake-duty/src/infrastructure/db/repo_impl"
+	"williamfeng323/mooncake-duty/src/mocks"
 	"williamfeng323/mooncake-duty/src/utils"
 )
 
 func TestModel(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Connection Suite")
-}
-
-type TestRepo struct {
-	repoimpl.BaseRepo
-	name string
-}
-
-func (tr *TestRepo) GetName() string {
-	return "Test"
 }
 
 var _ = Describe("Connection", func() {
@@ -59,7 +51,9 @@ var _ = Describe("Connection", func() {
 	Describe("#Register", func() {
 		Context("Giving a test struct", func() {
 			Describe("when register to a Connection instance", func() {
-				testRepo := &TestRepo{}
+				mockCtrl := gomock.NewController(GinkgoT())
+				testRepo := mocks.NewMockRepository(mockCtrl)
+				testRepo.EXPECT().GetName().AnyTimes().Return("Test")
 				db.Register(testRepo)
 				It("should register the collection to connection", func() {
 					conn := db.GetConnection()

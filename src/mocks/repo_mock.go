@@ -2,14 +2,15 @@
 // Source: ./src/infrastructure/db/repo.go
 
 // Package mock_db is a generated GoMock package.
-package mock_db
+package mocks
 
 import (
 	context "context"
+	reflect "reflect"
+
 	gomock "github.com/golang/mock/gomock"
 	mongo "go.mongodb.org/mongo-driver/mongo"
 	options "go.mongodb.org/mongo-driver/mongo/options"
-	reflect "reflect"
 )
 
 // MockValidator is a mock of Validator interface
