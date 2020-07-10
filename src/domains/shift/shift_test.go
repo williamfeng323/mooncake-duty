@@ -5,17 +5,17 @@ import (
 	"math"
 	"testing"
 	"time"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+
 	"williamfeng323/mooncake-duty/src/domains/account"
 	"williamfeng323/mooncake-duty/src/domains/project"
 	"williamfeng323/mooncake-duty/src/domains/shift"
 	repoimpl "williamfeng323/mooncake-duty/src/infrastructure/db/repo_impl"
 	"williamfeng323/mooncake-duty/src/utils"
-
-	"go.mongodb.org/mongo-driver/bson/primitive"
-
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-	"go.mongodb.org/mongo-driver/bson"
 )
 
 func TestShift(t *testing.T) {
@@ -33,8 +33,8 @@ var _ = Describe("Shift", func() {
 	Describe("#NewShift", func() {
 		Describe("If project does not exist", func() {
 			It("should return project not found error and nil shift", func() {
-				shift, err := shift.NewShift(primitive.NewObjectID(), shift.Mon, time.Now(), shift.Weekly)
-				Expect(shift).To(BeNil())
+				shf, err := shift.NewShift(primitive.NewObjectID(), shift.Mon, time.Now(), shift.Weekly)
+				Expect(shf).To(BeNil())
 				Expect(err).To(MatchError(project.NotFoundError{}))
 			})
 		})
@@ -43,26 +43,26 @@ var _ = Describe("Shift", func() {
 				Context("When the recurrence is daily", func() {
 					It("should replace it to the first date of the shift base on weekStart", func() {
 						shiftStartedDate := time.Date(2020, 6, 16, 0, 0, 0, 0, time.Now().Location())
-						shift, err := shift.NewShift(prj.ID, shift.Mon, shiftStartedDate, shift.Daily)
-						Expect(shift).ToNot(BeNil())
+						shf, err := shift.NewShift(prj.ID, shift.Mon, shiftStartedDate, shift.Daily)
+						Expect(shf).ToNot(BeNil())
 						Expect(err).To(BeNil())
-						Expect(shift.ShiftFirstDate.Format(time.RFC3339)).To(Equal(utils.ToDateStarted(shiftStartedDate).Format(time.RFC3339)))
+						Expect(shf.ShiftFirstDate.Format(time.RFC3339)).To(Equal(utils.ToDateStarted(shiftStartedDate).Format(time.RFC3339)))
 					})
 				})
 				Context("When the recurrence is weekly", func() {
 					It("should replace it to the first date of the shift base on weekStart", func() {
-						shift, err := shift.NewShift(prj.ID, shift.Mon, time.Date(2020, 6, 16, 0, 0, 0, 0, time.Now().Location()), shift.Weekly)
-						Expect(shift).ToNot(BeNil())
+						shf, err := shift.NewShift(prj.ID, shift.Mon, time.Date(2020, 6, 16, 0, 0, 0, 0, time.Now().Location()), shift.Weekly)
+						Expect(shf).ToNot(BeNil())
 						Expect(err).To(BeNil())
-						Expect(shift.ShiftFirstDate.Format(time.RFC3339)).To(Equal("2020-06-15T00:00:00+08:00"))
+						Expect(shf.ShiftFirstDate.Format(time.RFC3339)).To(Equal("2020-06-15T00:00:00+08:00"))
 					})
 				})
 				Context("When the recurrence is bi-weekly", func() {
 					It("should replace it to the first date of the shift base on weekStart", func() {
-						shift, err := shift.NewShift(prj.ID, shift.Mon, time.Date(2020, 6, 16, 0, 0, 0, 0, time.Now().Location()), shift.BiWeekly)
-						Expect(shift).ToNot(BeNil())
+						shf, err := shift.NewShift(prj.ID, shift.Mon, time.Date(2020, 6, 16, 0, 0, 0, 0, time.Now().Location()), shift.BiWeekly)
+						Expect(shf).ToNot(BeNil())
 						Expect(err).To(BeNil())
-						Expect(shift.ShiftFirstDate.Format(time.RFC3339)).To(Equal("2020-06-15T00:00:00+08:00"))
+						Expect(shf.ShiftFirstDate.Format(time.RFC3339)).To(Equal("2020-06-15T00:00:00+08:00"))
 					})
 				})
 			})
