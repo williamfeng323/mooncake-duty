@@ -14,20 +14,8 @@ import (
 	validatorimpl "williamfeng323/mooncake-duty/src/infrastructure/db/validator_impl"
 )
 
-// Tier is the support level of a team member.
-type Tier string
-
 // Severity describe the level of the alarm.
 type Severity int
-
-const (
-	// T1 predefined tier level
-	T1 Tier = "T1"
-	// T2 predefined tier level
-	T2 Tier = "T2"
-	// T3 predefined tier level
-	T3 Tier = "T3"
-)
 
 const (
 	// High represents the most serious issue, must be handle asap
@@ -54,12 +42,13 @@ type Member struct {
 
 // Project is the struct to contain project information.
 type Project struct {
-	repo         *repoimpl.ProjectRepo
-	db.BaseModel `json:",inline" bson:",inline"`
-	Name         string   `json:"name" bson:"name" required:"true"` // The name of the project is unique
-	Description  string   `json:"description" bson:"description" required:"true"`
-	Members      []Member `json:"members" bson:"members"`
-	Alarms       []Alarm  `json:"alarms" bson:"alarms"` // AlarmLog would be needed
+	repo          *repoimpl.ProjectRepo
+	db.BaseModel  `json:",inline" bson:",inline"`
+	Name          string        `json:"name" bson:"name" required:"true"` // The name of the project is unique
+	Description   string        `json:"description" bson:"description" required:"true"`
+	Members       []Member      `json:"members" bson:"members"`
+	AlertInterval time.Duration `json:"alertInterval" bson:"alertInterval"`
+	CallsPerTier  int           `json:"callsPerTier" bson:"callsPerTier"`
 }
 
 // NewProject returns a project instance with required fields

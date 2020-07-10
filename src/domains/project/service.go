@@ -1,6 +1,7 @@
 package project
 
 import (
+	"sync"
 	"time"
 	"williamfeng323/mooncake-duty/src/domains/account"
 	repoimpl "williamfeng323/mooncake-duty/src/infrastructure/db/repo_impl"
@@ -60,4 +61,18 @@ func (ps *Service) SetMembers(projectName string, members ...Member) ([]Member, 
 		return nil, members, err
 	}
 	return existingMembers.Members, failedMembers, nil
+}
+
+var projectService *Service
+var projectServiceLock sync.RWMutex
+
+// GetProjectService returns a singleton project service instance
+func GetProjectService() *Service {
+	projectServiceLock.Lock()
+	defer projectServiceLock.Unlock()
+	if projectService == nil {
+		projectService = &Service{}
+		projectService.SetRepo(repoimpl.GetProjectRepo())
+	}
+	return projectService
 }
