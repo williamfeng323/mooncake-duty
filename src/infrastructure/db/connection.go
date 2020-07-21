@@ -68,9 +68,9 @@ func (conn *Connection) register(repo Repository) {
 	if _, ok := conn.collectionRegistry.registries[repoName]; !ok {
 		collection := conn.Client.Database(conn.Database).Collection(repoName)
 		conn.collectionRegistry.registries[repoName] = collection
-		fmt.Printf("Registered collection '%v'", repoName)
+		fmt.Printf("Registered collection '%v'\n", repoName)
 	} else {
-		fmt.Printf("Tried to register collection '%v' twice", repoName)
+		fmt.Printf("Tried to register collection '%v' twice\n", repoName)
 	}
 }
 

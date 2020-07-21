@@ -23,15 +23,17 @@ type MongoConfig struct {
 
 // Config the configuration of the app.
 type Config struct {
-	Mongo      MongoConfig `mapstructure:"mongoConfig" yaml:"mongoConfig"`
-	JWTKey     string      `yaml:"jwtKey"`
-	EncryptKey string      `yaml:"encryptKey"`
+	Mongo       MongoConfig `mapstructure:"mongoConfig" yaml:"mongoConfig"`
+	JWTKey      string      `yaml:"jwtKey"`
+	JWTExpireIn int64       `yaml:"jwtExpireIn"`
+	EncryptKey  string      `yaml:"encryptKey"`
 }
 
-var config Config
+var config = &Config{
+	JWTExpireIn: 36000000,
+}
 
-//GetConf return the config object
-func GetConf() *Config {
+func init() {
 	ex, _ := os.Getwd()
 	appRootFolder := ex[:strings.Index(ex, "mooncake-duty")+14]
 	viper.AddConfigPath(appRootFolder)
@@ -44,11 +46,15 @@ func GetConf() *Config {
 	if err != nil {                             // Handle errors reading the config file
 		panic(fmt.Errorf("Fatal error config file: %s", err))
 	}
-	err = viper.Unmarshal(&config)
+	err = viper.Unmarshal(config)
 	if err != nil {
 		panic(fmt.Errorf("Fatal error config file: %s", err))
 	}
-	return &config
+}
+
+//GetConf return the config object
+func GetConf() *Config {
+	return config
 }
 
 // GetDefaultCtx Create a context with default timeout
