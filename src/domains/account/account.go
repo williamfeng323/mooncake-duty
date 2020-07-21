@@ -85,15 +85,3 @@ func (acct *Account) Save(allowReplace bool) (int, error) {
 	}
 	return 1, nil
 }
-
-// func refresh(tokenString string) (string, error) {
-// 	claims, err := utils.VerifyToken(tokenString)
-// 	if err != nil {
-// 		return "", err
-// 	}
-// 	refreshedToken, err := utils.SignToken(claims.Audience)
-// 	if err != nil {
-// 		return "", err
-// 	}
-// 	return refreshedToken, nil
-// }

@@ -3,12 +3,14 @@ package account
 import (
 	"fmt"
 	"reflect"
+	"sync"
 	"time"
 
 	repoimpl "williamfeng323/mooncake-duty/src/infrastructure/db/repo_impl"
 	"williamfeng323/mooncake-duty/src/utils"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Service exposes the account service
@@ -42,26 +44,39 @@ func (as *Service) SignIn(email string, password string) (string, error) {
 	return token, err
 }
 
+// Refresh refreshes the token
+func (as *Service) Refresh(tokenString string) (string, error) {
+	claims, err := utils.VerifyToken(tokenString, true)
+	if err != nil {
+		return "", err
+	}
+	refreshedToken, err := utils.SignToken(claims.Audience)
+	if err != nil {
+		return "", err
+	}
+	return refreshedToken, nil
+}
+
 // Register creates the basic account
-func (as *Service) Register(email string, password string, isAdmin bool) (string, error) {
+func (as *Service) Register(email string, password string, isAdmin bool) (string, *Account, error) {
 	acct, err := NewAccount(email, password)
 	acct.IsAdmin = isAdmin
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 	_, err = acct.Save(false)
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 	token, err := utils.SignToken(acct.Email)
-	return token, err
+	return token, acct, err
 }
 
 // UpdateContactMethods update the ways to send notification
 // you empty value will not be update into the account.
-func (as *Service) UpdateContactMethods(originEmail string, cm ContactMethods, email string, mobile string) error {
+func (as *Service) UpdateContactMethods(id string, cm ContactMethods, email string, mobile string) error {
 
-	account, err := as.GetAccount(originEmail)
+	account, err := as.GetAccountByID(id)
 	if err != nil {
 		return err
 	}
@@ -98,7 +113,7 @@ func (as *Service) UpdateContactMethods(originEmail string, cm ContactMethods, e
 
 // GrantSystemAdmin grants system admin auth to user
 func (as *Service) GrantSystemAdmin(email string) error {
-	account, err := as.GetAccount(email)
+	account, err := as.GetAccountByEmail(email)
 	if err != nil {
 		return err
 	}
@@ -110,7 +125,7 @@ func (as *Service) GrantSystemAdmin(email string) error {
 
 // DeactivateAccount logically deletes the account
 func (as *Service) DeactivateAccount(email string) error {
-	account, err := as.GetAccount(email)
+	account, err := as.GetAccountByEmail(email)
 	if err != nil {
 		return err
 	}
@@ -120,8 +135,8 @@ func (as *Service) DeactivateAccount(email string) error {
 	return err
 }
 
-// GetAccount returns the existing account
-func (as *Service) GetAccount(email string) (*Account, error) {
+// GetAccountByEmail returns the existing account
+func (as *Service) GetAccountByEmail(email string) (*Account, error) {
 	ctx, cancel := utils.GetDefaultCtx()
 	defer cancel()
 	rst := as.repo.FindOne(ctx, as.repo.EmailFilter(email))
@@ -131,4 +146,36 @@ func (as *Service) GetAccount(email string) (*Account, error) {
 		return nil, NotFoundError{}
 	}
 	return account, nil
+}
+
+// GetAccountByID returns the existing account
+func (as *Service) GetAccountByID(id string) (*Account, error) {
+	ctx, cancel := utils.GetDefaultCtx()
+	defer cancel()
+
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, NotFoundError{}
+	}
+	rst := as.repo.FindOne(ctx, bson.M{"_id": objectID})
+	account := &Account{}
+	rst.Decode(account)
+	if account.ID.IsZero() {
+		return nil, NotFoundError{}
+	}
+	return account, nil
+}
+
+var accountService *Service
+var accountServiceLock sync.RWMutex
+
+// GetAccountService returns a singleton account service instance
+func GetAccountService() *Service {
+	accountServiceLock.Lock()
+	defer accountServiceLock.Unlock()
+	if accountService == nil {
+		accountService = &Service{}
+		accountService.SetRepo(repoimpl.GetAccountRepo())
+	}
+	return accountService
 }

@@ -3,11 +3,14 @@ package account
 import (
 	"context"
 	"testing"
-	repoimpl "williamfeng323/mooncake-duty/src/infrastructure/db/repo_impl"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"go.mongodb.org/mongo-driver/bson"
+
+	repoimpl "williamfeng323/mooncake-duty/src/infrastructure/db/repo_impl"
 )
 
 func TestAccountService(t *testing.T) {
@@ -19,8 +22,9 @@ var _ = Describe("AccountService", func() {
 	repo := repoimpl.GetAccountRepo()
 	acctSrv := &Service{}
 	acctSrv.SetRepo(repoimpl.GetAccountRepo())
+	var acct2 *Account
 	BeforeEach(func() {
-		acct2, _ := NewAccount("test@test.com", "12345test")
+		acct2, _ = NewAccount("test@test.com", "12345test")
 		acct2.IsAdmin = true
 		acct2.Save(true)
 	})
@@ -53,14 +57,14 @@ var _ = Describe("AccountService", func() {
 	Describe("#Register", func() {
 		Context("call with exist email", func() {
 			It("should return error", func() {
-				rst, err := acctSrv.Register("test@test.com", "12345test", true)
+				rst, _, err := acctSrv.Register("test@test.com", "12345test", true)
 				Expect(rst).To(Equal(""))
 				Expect(err.Error()).To(Equal("Account already exist"))
 			})
 		})
 		Context("call with non-exist email", func() {
 			It("should return jwt token", func() {
-				rst, err := acctSrv.Register("test1@test.com", "12345test", true)
+				rst, _, err := acctSrv.Register("test1@test.com", "12345test", true)
 				Expect(rst).ToNot(BeNil())
 				Expect(err).To(BeNil())
 				repo.DeleteOne(context.Background(), bson.M{"email": "test1@test.com"})
@@ -72,7 +76,7 @@ var _ = Describe("AccountService", func() {
 			Context("update partial ContactMethods", func() {
 				It("should throw error if enable sendSMS when no mobile set", func() {
 					cm := ContactMethods{SentSMS: true}
-					err := acctSrv.UpdateContactMethods("test@test.com", cm, "", "")
+					err := acctSrv.UpdateContactMethods(acct2.ID.Hex(), cm, "", "")
 					Expect(err.Error()).To(Equal("Mobile must be set before you active send email notification"))
 				})
 				It("should update the contactMethods", func() {
@@ -80,7 +84,7 @@ var _ = Describe("AccountService", func() {
 					cm.SentHook = SentHook{
 						URL: "http://fake.com/sofake",
 					}
-					err := acctSrv.UpdateContactMethods("test@test.com", cm, "", "12345678910")
+					err := acctSrv.UpdateContactMethods(acct2.ID.Hex(), cm, "", "12345678910")
 					Expect(err).To(BeNil())
 				})
 			})
@@ -94,14 +98,14 @@ var _ = Describe("AccountService", func() {
 					cm.SentHook = SentHook{
 						URL: "http://fake.com/sofake",
 					}
-					err := acctSrv.UpdateContactMethods("test@test.com", cm, "", "")
+					err := acctSrv.UpdateContactMethods(acct2.ID.Hex(), cm, "", "")
 					Expect(err).To(BeNil())
 				})
 			})
 		})
 		Context("call with non-exist account", func() {
 			It("should return error", func() {
-				err := acctSrv.UpdateContactMethods("test2@test.com", ContactMethods{}, "", "")
+				err := acctSrv.UpdateContactMethods(primitive.NewObjectID().Hex(), ContactMethods{}, "", "")
 				Expect(err).ToNot(BeNil())
 			})
 		})
