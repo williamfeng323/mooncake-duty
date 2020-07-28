@@ -1,0 +1,3 @@
+test:
+	go test ./... -v -coverprofile=./test_report/coverage.out -covermode=count -coverpkg=./...
+	sonar-scanner -Dproject.settings=./sonar-project.properties

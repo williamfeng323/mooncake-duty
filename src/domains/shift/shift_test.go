@@ -158,7 +158,7 @@ var _ = Describe("Shift", func() {
 					It("The start date of the shift should be Mon and the end date should be Sun", func() {
 						tempShifts, err := testShift.DefaultShifts(utils.ToDateStarted(time.Now().AddDate(0, 0, -21)), time.Now())
 						Expect(err).To(BeNil())
-						Expect(len(tempShifts)).To(Equal(4))
+						Expect(len(tempShifts)).To(Equal(3))
 						for _, v := range tempShifts {
 							Expect(v.StartDate.Weekday()).To(Equal(time.Monday))
 							Expect(v.EndDate.Weekday()).To(Equal(time.Sunday))
@@ -182,7 +182,7 @@ var _ = Describe("Shift", func() {
 				Context("giving the shift start date 4 weeks before and the requesting start date of the period is 3 weeks before", func() {
 					It("should assign the shift to members by week and shifts should rotate from the starting week", func() {
 						tempShifts, err := testShift.DefaultShifts(utils.ToDateStarted(time.Now().AddDate(0, 0, -21)), time.Now())
-						Expect(len(tempShifts)).To(Equal(4))
+						Expect(len(tempShifts)).To(Equal(3))
 						Expect(err).To(BeNil())
 						Expect(tempShifts[0].T1Member.String()).To(Equal(acct2.ID.String()))
 						Expect(tempShifts[0].T2Member.String()).To(Equal(acct5.ID.String()))
