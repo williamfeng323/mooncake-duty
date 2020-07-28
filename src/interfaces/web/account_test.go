@@ -9,9 +9,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
-
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"github.com/gin-gonic/gin"
 	. "github.com/onsi/ginkgo"

@@ -10,3 +10,9 @@
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
+
+# Sonarqube result folder
+.scannerwork
+
+# Test result folder
+test_report
