@@ -10,5 +10,11 @@ func RegisterIssueJobs(c *cron.Cron) {
 }
 
 func notifyIssues() {
-
+	/*
+		issues := issueService.GetIssueLists()
+		for issue of each issue,
+			if issue.shouldNotify()
+				go issue.NotifyAsync(completeChan)
+	*/
+	// issueService := issue.GetIssueService()
 }

@@ -18,9 +18,9 @@ func init() {
 	db.Register(&IssueRepo{})
 }
 
-//GetName returns the name of Shift collection
+//GetName returns the name of Issue collection
 func (i *IssueRepo) GetName() string {
-	return "Shift"
+	return "Issue"
 }
 
 // SetCollection set the collection that communicate with db to the instance
@@ -69,7 +69,7 @@ func GetIssueRepo() *IssueRepo {
 	defer issueLock.Unlock()
 	if issueRepo == nil {
 		issueRepo = &IssueRepo{}
-		issueRepo.SetCollection(db.GetConnection().GetCollection("Shift"))
+		issueRepo.SetCollection(db.GetConnection().GetCollection(issueRepo.GetName()))
 	}
 	return issueRepo
 }

@@ -1,18 +1,62 @@
 package issue_test
 
-// import (
-// 	"testing"
+import (
+	"context"
+	"testing"
+	"williamfeng323/mooncake-duty/src/domains/issue"
+	"williamfeng323/mooncake-duty/src/domains/project"
+	repoimpl "williamfeng323/mooncake-duty/src/infrastructure/db/repo_impl"
 
-// 	. "github.com/onsi/ginkgo"
-// 	. "github.com/onsi/gomega"
-// )
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
-// func TestIssueService(t *testing.T) {
-// 	RegisterFailHandler(Fail)
-// 	RunSpecs(t, "Issue Service Suite")
-// }
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+	"go.mongodb.org/mongo-driver/bson"
+)
 
-// var _ = Describe("Issue Service", func() {
+func TestIssueService(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "Issue Service Suite")
+}
+
+var _ = Describe("Issue Service", func() {
+	prj := project.NewProject("issueTestProject", "test project for testing issue")
+	BeforeEach(func() {
+		prj.Create()
+	})
+	AfterEach(func() {
+		repoimpl.GetProjectRepo().DeleteOne(context.Background(), bson.M{"_id": prj.ID})
+	})
+	Describe("#CreateNewIssue", func() {
+		It("Should create new issue in DB when project ID is correct", func() {
+			print(prj.ID.Hex())
+			i, e := issue.GetIssueService().CreateNewIssue(prj.ID, "testService")
+			Expect(e).To(BeNil())
+			Expect(i.ProjectID).To(Equal(prj.ID))
+			Expect(i.IssueKey).To(Equal("testService"))
+			repoimpl.GetIssueRepo().DeleteOne(context.Background(), bson.M{"_id": i.ID})
+		})
+		It("should return project not found error when project id is invalid", func() {
+			i, e := issue.GetIssueService().CreateNewIssue(primitive.NewObjectID(), "testService")
+			Expect(e).ToNot(BeNil())
+			Expect(e).To(MatchError(project.NotFoundError{}))
+			Expect(i).To(BeNil())
+		})
+	})
+	XDescribe("#GetIssueLists", func() {
+		BeforeEach(func() {
+			issue.NewIssue(prj.ID, "mock")
+			issue.NewIssue(prj.ID, "mock2")
+		})
+		It("Should return issues that are not resolved", func() {
+
+		})
+		It("Should return empty issue list when no existing unresolved issues", func() {
+
+		})
+	})
+})
+
 // 	// var testShift *shift.Shift
 // 	// acct1, _ := account.NewAccount("Test1@test.com", "Testaccount1")
 // 	// acct2, _ := account.NewAccount("Test2@test.com", "Testaccount2")
