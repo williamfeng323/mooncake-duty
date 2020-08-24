@@ -90,4 +90,19 @@ var _ = Describe("Issue Service", func() {
 			Expect(len(issues)).To(Equal(3))
 		})
 	})
+	Describe("#GetIssueByID", func() {
+
+		It("should return not found error when issue id doesn't exist", func() {
+			i, e := issue.GetIssueService().GetIssueByID(primitive.NewObjectID())
+			Expect(e).To(MatchError(issue.NotFoundError{}))
+			Expect(i).To(BeNil())
+		})
+		It("should return the issue instance if issue exist", func() {
+			i0, _ := issue.GetIssueService().CreateNewIssue(prj.ID, "testService")
+			i, e := issue.GetIssueService().GetIssueByID(i0.ID)
+			Expect(e).To(BeNil())
+			Expect(i.ID).To(Equal(i0.ID))
+			repoimpl.GetIssueRepo().DeleteOne(context.Background(), bson.M{"_id": i0.ID})
+		})
+	})
 })

@@ -71,21 +71,24 @@ var _ = Describe("Issue", func() {
 		})
 		It("Should return the T1 members when T1 notification do not over number configure in project.CallsPerTier", func() {
 			iss := issue.Issue{ProjectID: prj.ID, IssueKey: "Test"}
-			iss.CreatedAt = time.Now()
+			tNow := time.Now()
+			iss.CreatedAt = &tNow
 			rst, err := iss.GetNotificationTier()
 			Expect(rst).To(Equal(issue.T1))
 			Expect(err).To(BeNil())
 		})
 		It("Should return the T2 members when T1 notification count over number configure in project.CallsPerTier", func() {
 			iss := issue.Issue{ProjectID: prj.ID, IssueKey: "Test", T1NotificationCount: prj.CallsPerTier}
-			iss.CreatedAt = time.Now()
+			tNow := time.Now()
+			iss.CreatedAt = &tNow
 			rst, err := iss.GetNotificationTier()
 			Expect(rst).To(Equal(issue.T2))
 			Expect(err).To(BeNil())
 		})
 		It("Should return the T3 members when T2 notification count over number configure in project.CallsPerTier", func() {
 			iss := issue.Issue{ProjectID: prj.ID, IssueKey: "Test", T1NotificationCount: prj.CallsPerTier, T2NotificationCount: prj.CallsPerTier}
-			iss.CreatedAt = time.Now()
+			tNow := time.Now()
+			iss.CreatedAt = &tNow
 			rst, err := iss.GetNotificationTier()
 			Expect(rst).To(Equal(issue.T3))
 			Expect(err).To(BeNil())
@@ -120,7 +123,7 @@ var _ = Describe("Issue", func() {
 			It("should be able to update the status, ack by and ack at when current status is init", func() {
 				i2.UpdateStatus(issue.Acknowledged, "me")
 				Expect(i2.Status).To(Equal(issue.Acknowledged))
-				Expect(i2.AcknowledgedAt).To(BeTemporally("~", time.Now(), time.Second))
+				Expect(i2.AcknowledgedAt.Local()).To(BeTemporally("~", time.Now().Local(), time.Second))
 				Expect(i2.AcknowledgedBy).To(Equal("me"))
 			})
 			It("should do nothing, when current status is resolved", func() {
@@ -134,15 +137,15 @@ var _ = Describe("Issue", func() {
 				i2.Status = issue.Acknowledged
 				i2.UpdateStatus(issue.Resolved, "me")
 				Expect(i2.Status).To(Equal(issue.Resolved))
-				Expect(i2.ResolvedAt).To(BeTemporally("~", time.Now(), time.Second))
+				Expect(i2.ResolvedAt.Local()).To(BeTemporally("~", time.Now().Local(), time.Second))
 				Expect(i2.ResolvedBy).To(Equal("me"))
 			})
 			It("Should also update ack info if current status is init", func() {
 				i2.UpdateStatus(issue.Resolved, "me")
 				Expect(i2.Status).To(Equal(issue.Resolved))
-				Expect(i2.AcknowledgedAt).To(BeTemporally("~", time.Now(), time.Second))
+				Expect(i2.AcknowledgedAt.Local()).To(BeTemporally("~", time.Now().Local(), time.Second))
 				Expect(i2.AcknowledgedBy).To(Equal("me"))
-				Expect(i2.ResolvedAt).To(BeTemporally("~", time.Now(), time.Second))
+				Expect(i2.ResolvedAt.Local()).To(BeTemporally("~", time.Now().Local(), time.Second))
 				Expect(i2.ResolvedBy).To(Equal("me"))
 			})
 		})

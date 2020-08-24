@@ -63,6 +63,22 @@ func (iss *Service) GetIssueLists(prjID primitive.ObjectID, issueKey string, sta
 	return issues, nil
 }
 
+// GetIssueByID returns the issue found by ID
+func (iss *Service) GetIssueByID(id primitive.ObjectID) (*Issue, error) {
+	fCtx, fCancel := utils.GetDefaultCtx()
+	defer fCancel()
+	rst := iss.repo.FindOne(fCtx, bson.M{"_id": id})
+	if rst.Err() != nil {
+		return nil, NotFoundError{}
+	}
+	i := Issue{}
+	err := rst.Decode(&i)
+	if err != nil {
+		return nil, err
+	}
+	return &i, nil
+}
+
 var issueService *Service
 var issueServiceLock sync.RWMutex
 

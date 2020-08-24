@@ -105,4 +105,27 @@ var _ = Describe("IssueRouter", func() {
 			Expect(len(rsp["issues"])).To(Equal(2))
 		})
 	})
+	Describe("GET /:id", func() {
+		var i1 *issue.Issue
+
+		BeforeEach(func() {
+			i1, _ = issue.GetIssueService().CreateNewIssue(prj.ID, "testService1")
+		})
+		AfterEach(func() {
+			repoimpl.GetIssueRepo().DeleteOne(context.Background(), bson.M{"_id": i1.ID})
+		})
+		It("Should return the issue details", func() {
+			req, _ := http.NewRequest("GET", fmt.Sprintf("/issues/%s", i1.ID.Hex()), nil)
+			router.ServeHTTP(testRecorder, req)
+			Expect(testRecorder.Code).To(Equal(200))
+			rsp := map[string]issue.Issue{}
+			json.Unmarshal(testRecorder.Body.Bytes(), &rsp)
+			Expect(rsp["issue"].ID).To(Equal(i1.ID))
+		})
+		It("Should return status 404 if id not exist", func() {
+			req, _ := http.NewRequest("GET", fmt.Sprintf("/issues/%s", primitive.NewObjectID().Hex()), nil)
+			router.ServeHTTP(testRecorder, req)
+			Expect(testRecorder.Code).To(Equal(404))
+		})
+	})
 })

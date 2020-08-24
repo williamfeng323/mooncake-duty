@@ -16,7 +16,7 @@ func RegisterIssueRoute(router *gin.Engine) {
 	issueRoutes := router.Group("/issues")
 	{
 		issueRoutes.GET("", issueList)
-		issueRoutes.GET("/:id")
+		issueRoutes.GET("/:id", getIssue)
 	}
 }
 
@@ -46,4 +46,30 @@ func issueList(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"issues": issues})
+}
+
+type issueID struct {
+	ID string `uri:"id" binding:"required"`
+}
+
+func getIssue(c *gin.Context) {
+	rawID := issueID{}
+	if err := c.ShouldBindUri(&rawID); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	id, err := primitive.ObjectIDFromHex(rawID.ID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Issue ID"})
+	}
+	i, err := issue.GetIssueService().GetIssueByID(id)
+	if err != nil {
+		if _, ok := err.(issue.NotFoundError); ok {
+			c.JSON(http.StatusNotFound, gin.H{"error": fmt.Sprintf("Issue %s not found", rawID.ID)})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"issue": i})
 }
