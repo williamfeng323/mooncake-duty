@@ -3,15 +3,16 @@ package issue_test
 import (
 	"context"
 	"testing"
-	"williamfeng323/mooncake-duty/src/domains/issue"
-	"williamfeng323/mooncake-duty/src/domains/project"
-	repoimpl "williamfeng323/mooncake-duty/src/infrastructure/db/repo_impl"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"go.mongodb.org/mongo-driver/bson"
+
+	"williamfeng323/mooncake-duty/src/domains/issue"
+	"williamfeng323/mooncake-duty/src/domains/project"
+	repoimpl "williamfeng323/mooncake-duty/src/infrastructure/db/repo_impl"
 )
 
 func TestIssueService(t *testing.T) {

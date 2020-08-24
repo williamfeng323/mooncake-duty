@@ -90,7 +90,7 @@ var _ = Describe("project.Service", func() {
 			prj.Create()
 		})
 		AfterEach(func() {
-			repoimpl.GetProjectRepo().DeleteOne(context.Background(), bson.M{"name": prj.Name})
+			repoimpl.GetProjectRepo().DeleteOne(context.Background(), bson.M{"_id": prj.ID})
 		})
 		It("should update the name and description if any of it provided", func() {
 			prjService.SetNameOrDescription(prj.ID, "newName", "new description")
@@ -124,10 +124,10 @@ var _ = Describe("project.Service", func() {
 		It("should return account when all fields are correct", func() {
 			projMember1 := project.Member{MemberID: acct1.ID, IsAdmin: false}
 			projMember2 := project.Member{MemberID: acct2.ID, IsAdmin: false}
-			proj, err := project.GetProjectService().CreateProject("TestService", "Test Project we created", projMember1, projMember2)
-			Expect(proj).ToNot(BeNil())
+			p, err := project.GetProjectService().CreateProject("TestService", "Test Project we created", projMember1, projMember2)
+			Expect(p).ToNot(BeNil())
 			Expect(err).To(BeNil())
-			repoimpl.GetProjectRepo().DeleteOne(context.Background(), bson.M{"_id": proj.ID})
+			repoimpl.GetProjectRepo().DeleteOne(context.Background(), bson.M{"_id": p.ID})
 		})
 	})
 	Describe("#GetProjectByName", func() {

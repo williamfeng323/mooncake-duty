@@ -35,7 +35,8 @@ var _ = Describe("DefaultValidator", func() {
 		})
 		It("Should not throw error if the document initted the required field", func() {
 			test := &TestModel{}
-			test.CreatedAt = time.Now()
+			tNow := time.Now()
+			test.CreatedAt = &tNow
 			test.ID = primitive.NewObjectID()
 			test.TestWhat = "What to test"
 			testValue := reflect.ValueOf(test)

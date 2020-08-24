@@ -129,7 +129,7 @@ var _ = Describe("ProjectRouter", func() {
 		AfterEach(func() {
 			repoimpl.GetAccountRepo().DeleteOne(context.Background(), bson.M{"_id": acct1.ID})
 			repoimpl.GetAccountRepo().DeleteOne(context.Background(), bson.M{"_id": acct2.ID})
-			repoimpl.GetProjectRepo().DeleteOne(context.Background(), bson.M{"name": prj.Name})
+			repoimpl.GetProjectRepo().DeleteOne(context.Background(), bson.M{"_id": prj.ID})
 		})
 		It("Should return 404 if project id incorrect", func() {
 			req, _ := http.NewRequest("POST", fmt.Sprintf(`/projects/%s`, primitive.NewObjectID().Hex()), bytes.NewReader([]byte(`{"name":"test"}`)))
