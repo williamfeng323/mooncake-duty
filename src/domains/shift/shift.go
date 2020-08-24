@@ -77,7 +77,8 @@ func NewShift(projectID primitive.ObjectID, weekStart WeekStart, shiftFirstDate 
 	}
 	shift := &Shift{WeekStart: weekStart, ShiftRecurrence: recurrence, ProjectID: projectID}
 	shift.ID = primitive.NewObjectID()
-	shift.CreatedAt = time.Now()
+	tNow := time.Now()
+	shift.CreatedAt = &tNow
 	switch recurrence {
 	case Daily:
 		shift.ShiftFirstDate = utils.ToDateStarted(shiftFirstDate)

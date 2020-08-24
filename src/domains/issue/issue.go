@@ -43,6 +43,11 @@ func (iStatus IssueStatus) String() string {
 	return statusArray[iStatus]
 }
 
+// Valid verify if it is a valid status
+func (iStatus IssueStatus) Valid() bool {
+	return iStatus >= 0 && iStatus <= 2
+}
+
 // Issue describe the triggered alert created issues
 type Issue struct {
 	repo                *repoimpl.IssueRepo
@@ -50,16 +55,16 @@ type Issue struct {
 	ProjectID           primitive.ObjectID `json:"projectId" bson:"projectId" required:"true"`
 	IssueKey            string             `json:"issueKey" bson:"issueKey" required:"true"`
 	Status              IssueStatus        `json:"status" bson:"status"`
-	AcknowledgedAt      time.Time          `json:"acknowledgedAt" bson:"acknowledgedAt"`
-	AcknowledgedBy      string             `json:"acknowledgedBy" bson:"acknowledgedBy"`
-	ResolvedAt          time.Time          `json:"resolvedAt" bson:"resolvedAt"`
-	ResolvedBy          string             `json:"resolvedBy" bson:"resolvedBy"`
-	T1NotifiedAt        []time.Time        `json:"t1NotifiedAt" bson:"t1LastNotifiedAt"`
-	T1NotificationCount int                `json:"t1NotificationCount" bson:"t1NotificationCount"`
-	T2NotifiedAt        []time.Time        `json:"t2NotifiedAt" bson:"t2LastNotifiedAt"`
-	T2NotificationCount int                `json:"t2NotificationCount" bson:"t2NotificationCount"`
-	T3NotifiedAt        []time.Time        `json:"t3NotifiedAt" bson:"t3LastNotifiedAt"`
-	T3NotificationCount int                `json:"t3NotificationCount" bson:"t3NotificationCount"`
+	AcknowledgedAt      *time.Time         `json:"acknowledgedAt,omitempty" bson:"acknowledgedAt,omitempty"`
+	AcknowledgedBy      string             `json:"acknowledgedBy,omitempty" bson:"acknowledgedBy,omitempty"`
+	ResolvedAt          *time.Time         `json:"resolvedAt,omitempty" bson:"resolvedAt,omitempty"`
+	ResolvedBy          string             `json:"resolvedBy,omitempty" bson:"resolvedBy,omitempty"`
+	T1NotifiedAt        []time.Time        `json:"t1NotifiedAt,omitempty" bson:"t1LastNotifiedAt,omitempty"`
+	T1NotificationCount int                `json:"t1NotificationCount,omitempty" bson:"t1NotificationCount,omitempty"`
+	T2NotifiedAt        []time.Time        `json:"t2NotifiedAt,omitempty" bson:"t2LastNotifiedAt,omitempty"`
+	T2NotificationCount int                `json:"t2NotificationCount,omitempty" bson:"t2NotificationCount,omitempty"`
+	T3NotifiedAt        []time.Time        `json:"t3NotifiedAt,omitempty" bson:"t3LastNotifiedAt,omitempty"`
+	T3NotificationCount int                `json:"t3NotificationCount,omitempty" bson:"t3NotificationCount,omitempty"`
 }
 
 // GetNotificationTier returns the proper notifier base on the current alert status
@@ -106,21 +111,23 @@ func (i *Issue) UpdateStatus(status IssueStatus, by string) error {
 	if i.Status > status {
 		return fmt.Errorf("The status cannot set back")
 	}
+
+	timeNow := time.Now()
 	switch status {
 	case Acknowledged:
 		i.Status = status
-		i.AcknowledgedAt = time.Now()
+		i.AcknowledgedAt = &timeNow
 		i.AcknowledgedBy = by
 	case Resolved:
 		if i.Status == Init {
-			i.AcknowledgedAt = time.Now()
+			i.AcknowledgedAt = &timeNow
 			i.AcknowledgedBy = by
 		}
 		i.Status = status
-		i.ResolvedAt = time.Now()
+		i.ResolvedAt = &timeNow
 		i.ResolvedBy = by
 	}
-	i.UpdatedAt = time.Now()
+	i.UpdatedAt = &timeNow
 	updCtx, updCtxCancel := utils.GetDefaultCtx()
 	defer updCtxCancel()
 
@@ -152,6 +159,7 @@ func NewIssue(projectID primitive.ObjectID, key string) (*Issue, error) {
 	}
 	iss.repo = repoimpl.GetIssueRepo()
 	iss.ID = primitive.NewObjectID()
-	iss.CreatedAt = time.Now()
+	tNow := time.Now()
+	iss.CreatedAt = &tNow
 	return iss, nil
 }
