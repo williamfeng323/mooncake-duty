@@ -47,7 +47,8 @@ func NewAccount(email string, password string) (*Account, error) {
 	}
 	account.ID = primitive.NewObjectID()
 	account.Password = string(encryptedPassword)
-	account.CreatedAt = time.Now()
+	tNow := time.Now()
+	account.CreatedAt = &tNow
 	account.repo = repoimpl.GetAccountRepo()
 	return account, nil
 }
@@ -71,7 +72,8 @@ func (acct *Account) Save(allowReplace bool) (int, error) {
 			return 0, err
 		}
 	} else if allowReplace {
-		acct.UpdatedAt = time.Now()
+		tNow := time.Now()
+		acct.UpdatedAt = &tNow
 		var inInterface bson.M
 		inrec, _ := bson.Marshal(acct)
 		bson.Unmarshal(inrec, &inInterface)

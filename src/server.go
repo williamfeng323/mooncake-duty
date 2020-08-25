@@ -8,12 +8,13 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
-	// "williamfeng323/mooncake-duty/src/domains/account"
-
-	webInterface "williamfeng323/mooncake-duty/src/interfaces/web"
-	middleware "williamfeng323/mooncake-duty/src/infrastructure/middlewares"
+	jobinterface "williamfeng323/mooncake-duty/src/interfaces/job"
 
 	"github.com/gin-gonic/gin"
+	"github.com/robfig/cron/v3"
+
+	middleware "williamfeng323/mooncake-duty/src/infrastructure/middlewares"
+	webInterface "williamfeng323/mooncake-duty/src/interfaces/web"
 )
 
 func main() {
@@ -21,6 +22,7 @@ func main() {
 	router.Use(middleware.Logger())
 
 	webInterface.RegisterAccountRoute(router)
+	webInterface.RegisterProjectRoute(router)
 	srv := &http.Server{
 		Addr:    ":8080",
 		Handler: router,
@@ -33,6 +35,8 @@ func main() {
 		}
 	}()
 
+	cronJobs := createCronJobs()
+	go cronJobs.Start()
 	// Wait for interrupt signal to gracefully shutdown the server with
 	// a timeout of 5 seconds.
 	quit := make(chan os.Signal, 1)
@@ -43,6 +47,11 @@ func main() {
 	<-quit
 	log.Println("Shutdown Server ...")
 
+	jobCtx := cronJobs.Stop()
+	if jobCtx != nil {
+		<-jobCtx.Done()
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
@@ -50,4 +59,14 @@ func main() {
 	}
 
 	log.Println("Server exiting")
+}
+
+func createCronJobs() *cron.Cron {
+	logger := cron.VerbosePrintfLogger(log.New(os.Stdout, "cron: ", log.LstdFlags))
+	cronJobs := cron.New(
+		cron.WithChain(cron.SkipIfStillRunning(logger), cron.Recover(logger)),
+		cron.WithLogger(logger))
+
+	jobinterface.RegisterIssueJobs(cronJobs)
+	return cronJobs
 }

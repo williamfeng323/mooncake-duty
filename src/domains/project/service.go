@@ -18,7 +18,7 @@ type Service struct {
 	repo *repoimpl.ProjectRepo
 }
 
-// SetRepo set the account repository to the service
+// SetRepo set the project repository to the service
 func (ps *Service) SetRepo(repo *repoimpl.ProjectRepo) {
 	ps.repo = repo
 }

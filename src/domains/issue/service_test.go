@@ -1,55 +1,109 @@
 package issue_test
 
-// import (
-// 	"testing"
+import (
+	"context"
+	"testing"
 
-// 	. "github.com/onsi/ginkgo"
-// 	. "github.com/onsi/gomega"
-// )
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
-// func TestIssueService(t *testing.T) {
-// 	RegisterFailHandler(Fail)
-// 	RunSpecs(t, "Issue Service Suite")
-// }
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+	"go.mongodb.org/mongo-driver/bson"
 
-// var _ = Describe("Issue Service", func() {
-// 	// var testShift *shift.Shift
-// 	// acct1, _ := account.NewAccount("Test1@test.com", "Testaccount1")
-// 	// acct2, _ := account.NewAccount("Test2@test.com", "Testaccount2")
-// 	// acct3, _ := account.NewAccount("Test3@test.com", "Testaccount3")
-// 	// acct4, _ := account.NewAccount("Test4@test.com", "Testaccount4")
-// 	// acct5, _ := account.NewAccount("Test5@test.com", "Testaccount5")
-// 	// acct6, _ := account.NewAccount("Test6@test.com", "Testaccount6")
-// 	// acct7, _ := account.NewAccount("Test7@test.com", "Testaccount7")
-// 	// acctSet := []*account.Account{acct1, acct2, acct3, acct4, acct5, acct6, acct7}
-// 	// for _, v := range acctSet {
-// 	// 	v.Save(false)
-// 	// }
-// 	// prj := project.NewProject("IssueServiceTest", "This is a test project")
-// 	// prj.AlertInterval = 10 * time.Minute
-// 	// prj.CallsPerTier = 2
-// 	// prj.Create()
-// 	// project.GetProjectService().SetMembers(prj.Name,
-// 	// 	project.Member{MemberID: acct1.ID, IsAdmin: false}, project.Member{MemberID: acct2.ID, IsAdmin: false}, project.Member{MemberID: acct3.ID, IsAdmin: false},
-// 	// 	project.Member{MemberID: acct4.ID, IsAdmin: false}, project.Member{MemberID: acct5.ID, IsAdmin: false}, project.Member{MemberID: acct6.ID, IsAdmin: false},
-// 	// 	project.Member{MemberID: acct7.ID, IsAdmin: true})
-// 	// testShift, _ = shift.NewShift(prj.ID, shift.Mon, time.Date(2020, 5, 16, 0, 0, 0, 0, time.Now().Location()), shift.Weekly)
-// 	// testShift.T1Members = []primitive.ObjectID{acct1.ID, acct2.ID, acct3.ID}
-// 	// testShift.T2Members = []primitive.ObjectID{acct4.ID, acct5.ID, acct6.ID}
-// 	// testShift.T3Members = []primitive.ObjectID{acct7.ID}
+	"williamfeng323/mooncake-duty/src/domains/issue"
+	"williamfeng323/mooncake-duty/src/domains/project"
+	repoimpl "williamfeng323/mooncake-duty/src/infrastructure/db/repo_impl"
+)
 
-// 	// testShift.Create()
+func TestIssueService(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "Issue Service Suite")
+}
 
-// 	// AfterSuite(func() {
-// 	// 	acctRepo := repoimpl.GetAccountRepo()
-// 	// 	for _, v := range acctSet {
-// 	// 		acctRepo.DeleteOne(context.Background(), bson.M{"_id": v.ID})
-// 	// 	}
-// 	// 	repoimpl.GetProjectRepo().DeleteOne(context.Background(), bson.M{"_id": prj.ID})
-// 	// 	repoimpl.GetShiftRepo().DeleteOne(context.Background(), bson.M{"_id": testShift.ID})
-// 	// })
-// 	// prj.Create()
-// 	// Describe("CreateIssue", func() {
+var _ = Describe("Issue Service", func() {
+	prj := project.NewProject("issueTestProject", "test project for testing issue")
+	BeforeEach(func() {
+		prj.Create()
+	})
+	AfterEach(func() {
+		repoimpl.GetProjectRepo().DeleteOne(context.Background(), bson.M{"_id": prj.ID})
+	})
+	Describe("#CreateNewIssue", func() {
+		It("Should create new issue in DB when project ID is correct", func() {
+			print(prj.ID.Hex())
+			i, e := issue.GetIssueService().CreateNewIssue(prj.ID, "testService")
+			Expect(e).To(BeNil())
+			Expect(i.ProjectID).To(Equal(prj.ID))
+			Expect(i.IssueKey).To(Equal("testService"))
+			repoimpl.GetIssueRepo().DeleteOne(context.Background(), bson.M{"_id": i.ID})
+		})
+		It("should return project not found error when project id is invalid", func() {
+			i, e := issue.GetIssueService().CreateNewIssue(primitive.NewObjectID(), "testService")
+			Expect(e).ToNot(BeNil())
+			Expect(e).To(MatchError(project.NotFoundError{}))
+			Expect(i).To(BeNil())
+		})
+	})
+	Describe("#GetIssueLists", func() {
+		prj2 := project.NewProject("issueTestProject2", "test project for testing issue")
 
-// 	// })
-// })
+		var i1 *issue.Issue
+		var i2 *issue.Issue
+		var i3 *issue.Issue
+		var i4 *issue.Issue
+		var i5 *issue.Issue
+		var i6 *issue.Issue
+		BeforeEach(func() {
+			prj2.Create()
+			i1, _ = issue.GetIssueService().CreateNewIssue(prj.ID, "mock1")
+			i2, _ = issue.GetIssueService().CreateNewIssue(prj.ID, "mock1")
+			i3, _ = issue.GetIssueService().CreateNewIssue(prj.ID, "mock3")
+			i4, _ = issue.GetIssueService().CreateNewIssue(prj2.ID, "mock1")
+			i5, _ = issue.GetIssueService().CreateNewIssue(prj2.ID, "mock2")
+			i6, _ = issue.GetIssueService().CreateNewIssue(prj2.ID, "mock3")
+		})
+		AfterEach(func() {
+			repoimpl.GetProjectRepo().DeleteOne(context.Background(), bson.M{"_id": prj2.ID})
+			repoimpl.GetIssueRepo().DeleteOne(context.Background(), bson.M{"_id": i1.ID})
+			repoimpl.GetIssueRepo().DeleteOne(context.Background(), bson.M{"_id": i2.ID})
+			repoimpl.GetIssueRepo().DeleteOne(context.Background(), bson.M{"_id": i3.ID})
+			repoimpl.GetIssueRepo().DeleteOne(context.Background(), bson.M{"_id": i4.ID})
+			repoimpl.GetIssueRepo().DeleteOne(context.Background(), bson.M{"_id": i5.ID})
+			repoimpl.GetIssueRepo().DeleteOne(context.Background(), bson.M{"_id": i6.ID})
+		})
+		It("Should return project not found error if project id does not exist", func() {
+			issues, err := issue.GetIssueService().GetIssueLists(primitive.NewObjectID(), "", issue.Init)
+			Expect(issues).To(BeNil())
+			Expect(err).To(MatchError(project.NotFoundError{}))
+		})
+		It("Should return issue list with specific status, and issue key", func() {
+			issues, err := issue.GetIssueService().GetIssueLists(prj.ID, "mock1", issue.Init)
+			Expect(err).To(BeNil())
+			Expect(len(issues)).To(Equal(2))
+
+			i4.UpdateStatus(issue.Resolved, "test")
+			issues, err = issue.GetIssueService().GetIssueLists(prj2.ID, "", issue.Init)
+			Expect(err).To(BeNil())
+			Expect(len(issues)).To(Equal(2))
+
+			issues, err = issue.GetIssueService().GetIssueLists(prj2.ID, "", -1)
+			Expect(err).To(BeNil())
+			Expect(len(issues)).To(Equal(3))
+		})
+	})
+	Describe("#GetIssueByID", func() {
+
+		It("should return not found error when issue id doesn't exist", func() {
+			i, e := issue.GetIssueService().GetIssueByID(primitive.NewObjectID())
+			Expect(e).To(MatchError(issue.NotFoundError{}))
+			Expect(i).To(BeNil())
+		})
+		It("should return the issue instance if issue exist", func() {
+			i0, _ := issue.GetIssueService().CreateNewIssue(prj.ID, "testService")
+			i, e := issue.GetIssueService().GetIssueByID(i0.ID)
+			Expect(e).To(BeNil())
+			Expect(i.ID).To(Equal(i0.ID))
+			repoimpl.GetIssueRepo().DeleteOne(context.Background(), bson.M{"_id": i0.ID})
+		})
+	})
+})

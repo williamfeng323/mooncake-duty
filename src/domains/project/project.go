@@ -59,7 +59,8 @@ func NewProject(name string, description string, members ...Member) *Project {
 		Members:     members,
 	}
 	project.ID = primitive.NewObjectID()
-	project.CreatedAt = time.Now()
+	tNow := time.Now()
+	project.CreatedAt = &tNow
 	project.repo = repoimpl.GetProjectRepo()
 	return project
 }
