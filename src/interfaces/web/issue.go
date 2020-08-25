@@ -17,6 +17,7 @@ func RegisterIssueRoute(router *gin.Engine) {
 	{
 		issueRoutes.GET("", issueList)
 		issueRoutes.GET("/:id", getIssue)
+		issueRoutes.POST("/:id/status", updateStatus)
 	}
 }
 
@@ -72,4 +73,12 @@ func getIssue(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"issue": i})
+}
+
+type updateStatusParam struct {
+	Status issue.IssueStatus `json:"status"`
+}
+
+func updateStatus(c *gin.Context) {
+
 }
