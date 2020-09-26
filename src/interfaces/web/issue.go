@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"williamfeng323/mooncake-duty/src/domains/issue"
 	project "williamfeng323/mooncake-duty/src/domains/project"
+	"williamfeng323/mooncake-duty/src/infrastructure/middlewares"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
@@ -16,7 +17,7 @@ func RegisterIssueRoute(router *gin.Engine) {
 	issueRoutes := router.Group("/issues")
 	{
 		issueRoutes.GET("", issueList)
-		issueRoutes.GET("/:id", getIssue)
+		issueRoutes.GET("/:id", middlewares.Authenticate(), getIssue)
 		issueRoutes.POST("/:id/status", updateStatus)
 	}
 }
